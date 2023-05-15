@@ -32,12 +32,6 @@ module.exports = {
     },
   },
   networks: {
-    hardhat: {
-      // forking: {
-      //   url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_KEY}`,
-      //   blockNumber: 13178618,
-      // }
-    },
     c1_devnet: {
       url: process.env.C1_DEVNET_RPC_URL,
       accounts: [`0x${process.env.PK}`],
