@@ -6,11 +6,7 @@
 // MADA_PRICE_FEED.set("2001", "");
 // MADA_PRICE_FEED.set("200101", "");
 
-module.exports = async function ({
-  getChainId,
-  getNamedAccounts,
-  deployments,
-}) {
+module.exports = async function({ getChainId, getNamedAccounts, deployments }) {
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
   const chainId = await getChainId();
@@ -33,7 +29,7 @@ module.exports = async function ({
     ],
     log: true,
     deterministicDeployment: false,
-    contract: "XMada",
+    contract: "CEther",
   });
   await deployment.receipt;
 

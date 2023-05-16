@@ -7,6 +7,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     from: deployer,
     log: true,
     deterministicDeployment: false,
+    autoMine: true,
   });
 
   const unitroller = await ethers.getContract("Unitroller");
@@ -15,14 +16,12 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     from: deployer,
     log: true,
     deterministicDeployment: false,
+    autoMine: true,
   });
+
   const Comptroller = await ethers.getContract("Comptroller");
 
   console.log("Setting Comptroller as implementation of Unitroller...");
-
-  const gasLimit = await unitroller.estimateGas._setPendingImplementation(
-    Comptroller.address
-  );
 
   const deployment = await unitroller._setPendingImplementation(
     Comptroller.address

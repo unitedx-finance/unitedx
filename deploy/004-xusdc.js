@@ -6,11 +6,7 @@ const USDC_PRICE_FEED = new Map();
 USDC_PRICE_FEED.set("2001", "0xa24de01df22b63d23Ebc1882a5E3d4ec0d907bFB");
 USDC_PRICE_FEED.set("200101", "0xF096872672F44d6EBA71458D74fe67F9a77a23B9");
 
-module.exports = async function ({
-  getChainId,
-  getNamedAccounts,
-  deployments,
-}) {
+module.exports = async function({ getChainId, getNamedAccounts, deployments }) {
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
   const chainId = await getChainId();
@@ -20,7 +16,7 @@ module.exports = async function ({
   const comptroller = Comptroller.attach(unitroller.address);
 
   const interestRateModel = await ethers.getContract("StableJumpRateModel");
-  const xUsdcDelegate = await ethers.getContract("XErc20Delegate");
+  const xUsdcDelegate = await ethers.getContract("CErc20Delegate");
 
   const deployment = await deploy("XUsdcDelegator", {
     from: deployer,
@@ -38,7 +34,7 @@ module.exports = async function ({
     ],
     log: true,
     deterministicDeployment: false,
-    contract: "XErc20Delegator",
+    contract: "CErc20Delegator",
   });
   await deployment.receipt;
 
@@ -52,7 +48,7 @@ module.exports = async function ({
   console.log("Setting price feed source for xUSDC ");
   await priceOracle.setUnderlyingPrice(
     xUsdcDelegator.address,
-    ethers.utils.parseUnits("1", 18)
+    ethers.utils.parseUnits("0.99", 18)
   );
 
   const collateralFactor = "0.80";
@@ -74,7 +70,7 @@ module.exports.dependencies = [
   "Comptroller",
   "JumpRateModel",
   "PriceOracle",
-  "XErc20Delegate",
+  "CErc20Delegate",
 ];
 
 module.exports.skip = async () => {

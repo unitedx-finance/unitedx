@@ -13,8 +13,6 @@ module.exports = async function({ getNamedAccounts, deployments }) {
     deterministicDeployment: false,
     contract: "SimplePriceOracle",
   });
-
-  const chainId = await getChainId();
 };
 
 module.exports.tags = ["PriceOracle"];
