@@ -1,6 +1,6 @@
-const AGGREGATOR_ORACLES = new Map();
-AGGREGATOR_ORACLES.set("2001", "0xc531410f61FA22e19048D406EDE3361b3de5c386");
-AGGREGATOR_ORACLES.set("200101", "0x47a7d67e89E5714456b9af39703C1dc62203002A");
+const A3O_WRAPPER = new Map();
+A3O_WRAPPER.set("2001", "");
+A3O_WRAPPER.set("200101", "0xDf60876c566201086846A1ff19d8853F95178c2F");
 
 module.exports = async function({ getNamedAccounts, deployments }) {
   const { deploy } = deployments;
@@ -13,14 +13,24 @@ module.exports = async function({ getNamedAccounts, deployments }) {
     deterministicDeployment: false,
     contract: "SimplePriceOracle",
   });
+
+  const chainId = await getChainId();
+
+  await deploy("OracleAggregatorV1", {
+    from: deployer,
+    log: true,
+    deterministicDeployment: false,
+    contract: "OracleAggregatorV1",
+    args: [A3O_WRAPPER.get(chainId)],
+  });
 };
 
 module.exports.tags = ["PriceOracle"];
 
 module.exports.skip = async () => {
   const chainId = await getChainId();
-  if (!AGGREGATOR_ORACLES.has(chainId)) {
-    console.log("AGGREGATOR_ORACLES address missing");
+  if (!A3O_WRAPPER.has(chainId)) {
+    console.log("AGGREGATOR_ORACLES address missing: ", chainId);
     return true;
   }
 };

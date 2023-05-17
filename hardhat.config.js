@@ -8,20 +8,14 @@ require("hardhat-watcher");
 require("hardhat-contract-sizer");
 require("hardhat-storage-layout-diff");
 
-// This is a sample Hardhat task. To learn how to create your own go to
-// https://hardhat.org/guides/create-task.html
-task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
-  const accounts = await hre.ethers.getSigners();
-
-  for (const account of accounts) {
-    console.log(account.address);
-  }
-});
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
-  // defaultNetwork: "hardhat",
+  defaultNetwork: "hardhat",
+  mocha: {
+    timeout: 20000,
+  },
   namedAccounts: {
     deployer: {
       default: 0,
@@ -37,6 +31,30 @@ module.exports = {
       accounts: [`0x${process.env.PK}`],
       chainId: 200101,
       gas: "auto",
+    },
+    c1_mainnet: {
+      url: process.env.C1_MAINNET_RPC_URL,
+      accounts: [`0x${process.env.PK}`],
+      chainId: 2001,
+      gas: "auto",
+    },
+    hardhat: {
+      forking: {
+        enabled: true,
+        url: `https://rpc-devnet-cardano-evm.c1.milkomeda.com`,
+        blockNumber: 12787541,
+      },
+      live: false,
+      saveDeployments: true,
+      tags: ["test", "local"],
+    },
+    // localhost: {
+    //   url: " http://127.0.0.1:8545/", // Replace with your preferred localhost RPC URL
+    // },
+    localhost: {
+      live: false,
+      saveDeployments: true,
+      tags: ["local"],
     },
   },
   solidity: {
@@ -76,6 +94,6 @@ module.exports = {
     timeout: 10000,
   },
   paths: {
-    tests: "./tests/hardhat",
+    tests: "./test",
   },
 };
