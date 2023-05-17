@@ -3,7 +3,7 @@ pragma solidity ^0.8.10;
 
 import "../CErc20.sol";
 import "../CToken.sol";
-import "../PriceOracle.sol";
+import "../Oracle/PriceOracle.sol";
 import "../EIP20Interface.sol";
 import "../Governance/GovernorAlpha.sol";
 import "../Governance/Comp.sol";
