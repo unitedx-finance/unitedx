@@ -11,12 +11,7 @@ interface ComptrollerImplMethods {
     reinitializing?: boolean
   ): Sendable<string>;
 
-  _become(
-    comptroller: string,
-    compRate: encodedNumber,
-    compMarkets: string[],
-    otherMarkets: string[]
-  ): Sendable<string>;
+  _become(comptroller: string, compRate: encodedNumber, compMarkets: string[], otherMarkets: string[]): Sendable<string>;
 }
 
 export interface ComptrollerImpl extends Contract {

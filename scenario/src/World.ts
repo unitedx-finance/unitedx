@@ -18,7 +18,7 @@ import { Accounts, loadAccounts } from './Accounts';
 import Web3 from 'web3';
 import { Saddle } from 'eth-saddle';
 import { Command, Fetcher } from './Command';
-import { Value} from './Value';
+import { Value } from './Value';
 
 const startingBlockNumber = 1000;
 
@@ -63,7 +63,7 @@ const defaultWorldProps: WorldProps = {
   lastInvokation: null,
   newInvokation: false,
   blockNumber: 0,
-  gasCounter: {value: 0},
+  gasCounter: { value: 0 },
   lastContract: null,
   invariants: [],
   expectations: [],
@@ -85,7 +85,7 @@ const defaultWorldProps: WorldProps = {
   eventDecoder: {},
   fs: null,
   commands: undefined,
-  fetchers: undefined,
+  fetchers: undefined
 };
 
 export class World extends Record(defaultWorldProps) {
@@ -122,7 +122,7 @@ export class World extends Record(defaultWorldProps) {
     return {
       ...baseOpts,
       ...this.invokationOpts,
-      ...this.value ? {value: this.value.toString()} : {}
+      ...(this.value ? { value: this.value.toString() } : {})
     };
   }
 
@@ -197,7 +197,7 @@ export async function initWorld(
     lastInvokation: null,
     newInvokation: true,
     blockNumber: startingBlockNumber,
-    gasCounter: {value: 0},
+    gasCounter: { value: 0 },
     lastContract: null,
     invariants: [new SuccessInvariant()], // Start with invariant success,
     expectations: [],
@@ -326,18 +326,18 @@ export function describeUser(world: World, address: string): string {
   // Look up by alias
   let alias = Object.entries(world.settings.aliases).find(([name, aliasAddr]) => aliasAddr === address);
   if (alias) {
-    return `${alias[0]} (${address.slice(0,6)}...)`;
+    return `${alias[0]} (${address.slice(0, 6)}...)`;
   }
 
   // Look up by `from`
   if (world.settings.from === address) {
-    return `root (${address.slice(0,6)}...)`;
+    return `root (${address.slice(0, 6)}...)`;
   }
 
   // Look up by unlocked accounts
   let account = world.accounts.find(account => account.address === address);
   if (account) {
-    return `${account.name} (${address.slice(0,6)}...)`;
+    return `${account.name} (${address.slice(0, 6)}...)`;
   }
 
   // Otherwise, just return the address itself

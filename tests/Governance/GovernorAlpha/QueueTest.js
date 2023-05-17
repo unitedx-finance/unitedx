@@ -5,14 +5,14 @@ const {
   advanceBlocks,
   freezeTime,
   mineBlock
-} = require('../../Utils/Ethereum');
+} = require("../../Utils/Ethereum");
 
 async function enfranchise(comp, actor, amount) {
-  await send(comp, 'transfer', [actor, etherMantissa(amount)]);
-  await send(comp, 'delegate', [actor], {from: actor});
+  await send(comp, "transfer", [actor, etherMantissa(amount)]);
+  await send(comp, "delegate", [actor], { from: actor });
 }
 
-describe('GovernorAlpha#queue/1', () => {
+describe("GovernorAlpha#queue/1", () => {
   let root, a1, a2, accounts;
   beforeAll(async () => {
     [root, a1, a2, ...accounts] = saddle.accounts;
@@ -20,10 +20,14 @@ describe('GovernorAlpha#queue/1', () => {
 
   describe("overlapping actions", () => {
     it("reverts on queueing overlapping actions in same proposal", async () => {
-      const timelock = await deploy('TimelockHarness', [root, 86400 * 2]);
-      const comp = await deploy('Comp', [root]);
-      const gov = await deploy('GovernorAlpha', [timelock._address, comp._address, root]);
-      const txAdmin = await send(timelock, 'harnessSetAdmin', [gov._address]);
+      const timelock = await deploy("TimelockHarness", [root, 86400 * 2]);
+      const comp = await deploy("Comp", [root]);
+      const gov = await deploy("GovernorAlpha", [
+        timelock._address,
+        comp._address,
+        root
+      ]);
+      const txAdmin = await send(timelock, "harnessSetAdmin", [gov._address]);
 
       await enfranchise(comp, a1, 3e6);
       await mineBlock();
@@ -31,23 +35,37 @@ describe('GovernorAlpha#queue/1', () => {
       const targets = [comp._address, comp._address];
       const values = ["0", "0"];
       const signatures = ["getBalanceOf(address)", "getBalanceOf(address)"];
-      const calldatas = [encodeParameters(['address'], [root]), encodeParameters(['address'], [root])];
-      const {reply: proposalId1} = await both(gov, 'propose', [targets, values, signatures, calldatas, "do nothing"], {from: a1});
+      const calldatas = [
+        encodeParameters(["address"], [root]),
+        encodeParameters(["address"], [root])
+      ];
+      const { reply: proposalId1 } = await both(
+        gov,
+        "propose",
+        [targets, values, signatures, calldatas, "do nothing"],
+        { from: a1 }
+      );
       await mineBlock();
 
-      const txVote1 = await send(gov, 'castVote', [proposalId1, true], {from: a1});
+      const txVote1 = await send(gov, "castVote", [proposalId1, true], {
+        from: a1
+      });
       await advanceBlocks(20000);
 
-      await expect(
-        send(gov, 'queue', [proposalId1])
-      ).rejects.toRevert("revert GovernorAlpha::_queueOrRevert: proposal action already queued at eta");
+      await expect(send(gov, "queue", [proposalId1])).rejects.toRevert(
+        "revert GovernorAlpha::_queueOrRevert: proposal action already queued at eta"
+      );
     });
 
     it("reverts on queueing overlapping actions in different proposals, works if waiting", async () => {
-      const timelock = await deploy('TimelockHarness', [root, 86400 * 2]);
-      const comp = await deploy('Comp', [root]);
-      const gov = await deploy('GovernorAlpha', [timelock._address, comp._address, root]);
-      const txAdmin = await send(timelock, 'harnessSetAdmin', [gov._address]);
+      const timelock = await deploy("TimelockHarness", [root, 86400 * 2]);
+      const comp = await deploy("Comp", [root]);
+      const gov = await deploy("GovernorAlpha", [
+        timelock._address,
+        comp._address,
+        root
+      ]);
+      const txAdmin = await send(timelock, "harnessSetAdmin", [gov._address]);
 
       await enfranchise(comp, a1, 3e6);
       await enfranchise(comp, a2, 3e6);
@@ -56,23 +74,37 @@ describe('GovernorAlpha#queue/1', () => {
       const targets = [comp._address];
       const values = ["0"];
       const signatures = ["getBalanceOf(address)"];
-      const calldatas = [encodeParameters(['address'], [root])];
-      const {reply: proposalId1} = await both(gov, 'propose', [targets, values, signatures, calldatas, "do nothing"], {from: a1});
-      const {reply: proposalId2} = await both(gov, 'propose', [targets, values, signatures, calldatas, "do nothing"], {from: a2});
+      const calldatas = [encodeParameters(["address"], [root])];
+      const { reply: proposalId1 } = await both(
+        gov,
+        "propose",
+        [targets, values, signatures, calldatas, "do nothing"],
+        { from: a1 }
+      );
+      const { reply: proposalId2 } = await both(
+        gov,
+        "propose",
+        [targets, values, signatures, calldatas, "do nothing"],
+        { from: a2 }
+      );
       await mineBlock();
 
-      const txVote1 = await send(gov, 'castVote', [proposalId1, true], {from: a1});
-      const txVote2 = await send(gov, 'castVote', [proposalId2, true], {from: a2});
+      const txVote1 = await send(gov, "castVote", [proposalId1, true], {
+        from: a1
+      });
+      const txVote2 = await send(gov, "castVote", [proposalId2, true], {
+        from: a2
+      });
       await advanceBlocks(20000);
       await freezeTime(100);
 
-      const txQueue1 = await send(gov, 'queue', [proposalId1]);
-      await expect(
-        send(gov, 'queue', [proposalId2])
-      ).rejects.toRevert("revert GovernorAlpha::_queueOrRevert: proposal action already queued at eta");
+      const txQueue1 = await send(gov, "queue", [proposalId1]);
+      await expect(send(gov, "queue", [proposalId2])).rejects.toRevert(
+        "revert GovernorAlpha::_queueOrRevert: proposal action already queued at eta"
+      );
 
       await freezeTime(101);
-      const txQueue2 = await send(gov, 'queue', [proposalId2]);
+      const txQueue2 = await send(gov, "queue", [proposalId2]);
     });
   });
 });

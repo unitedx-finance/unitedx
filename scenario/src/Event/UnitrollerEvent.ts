@@ -15,11 +15,7 @@ async function genUnitroller(world: World, from: string, params: Event): Promise
   let { world: nextWorld, unitroller, unitrollerData } = await buildUnitroller(world, from, params);
   world = nextWorld;
 
-  world = addAction(
-    world,
-    `Added Unitroller (${unitrollerData.description}) at address ${unitroller._address}`,
-    unitrollerData.invokation
-  );
+  world = addAction(world, `Added Unitroller (${unitrollerData.description}) at address ${unitroller._address}`, unitrollerData.invokation);
 
   return world;
 }
@@ -42,30 +38,15 @@ async function acceptAdmin(world: World, from: string, unitroller: Unitroller): 
   return world;
 }
 
-async function setPendingAdmin(
-  world: World,
-  from: string,
-  unitroller: Unitroller,
-  pendingAdmin: string
-): Promise<World> {
-  let invokation = await invoke(
-    world,
-    unitroller.methods._setPendingAdmin(pendingAdmin),
-    from,
-    ComptrollerErrorReporter
-  );
+async function setPendingAdmin(world: World, from: string, unitroller: Unitroller, pendingAdmin: string): Promise<World> {
+  let invokation = await invoke(world, unitroller.methods._setPendingAdmin(pendingAdmin), from, ComptrollerErrorReporter);
 
   world = addAction(world, `Set pending admin to ${pendingAdmin}`, invokation);
 
   return world;
 }
 
-async function setPendingImpl(
-  world: World,
-  from: string,
-  unitroller: Unitroller,
-  comptrollerImpl: ComptrollerImpl
-): Promise<World> {
+async function setPendingImpl(world: World, from: string, unitroller: Unitroller, comptrollerImpl: ComptrollerImpl): Promise<World> {
   let invokation = await invoke(
     world,
     unitroller.methods._setPendingImplementation(comptrollerImpl._address),
@@ -122,8 +103,7 @@ export function unitrollerCommands() {
       `,
       'SetPendingAdmin',
       [new Arg('unitroller', getUnitroller, { implicit: true }), new Arg('pendingAdmin', getAddressV)],
-      (world, from, { unitroller, pendingAdmin }) =>
-        setPendingAdmin(world, from, unitroller, pendingAdmin.val)
+      (world, from, { unitroller, pendingAdmin }) => setPendingAdmin(world, from, unitroller, pendingAdmin.val)
     ),
     new Command<{ unitroller: Unitroller; comptrollerImpl: ComptrollerImpl }>(
       `
@@ -133,20 +113,12 @@ export function unitrollerCommands() {
           * E.g. "Unitroller SetPendingImpl MyScenImpl" - Sets the current comptroller implementation to MyScenImpl
       `,
       'SetPendingImpl',
-      [
-        new Arg('unitroller', getUnitroller, { implicit: true }),
-        new Arg('comptrollerImpl', getComptrollerImpl)
-      ],
-      (world, from, { unitroller, comptrollerImpl }) =>
-        setPendingImpl(world, from, unitroller, comptrollerImpl)
+      [new Arg('unitroller', getUnitroller, { implicit: true }), new Arg('comptrollerImpl', getComptrollerImpl)],
+      (world, from, { unitroller, comptrollerImpl }) => setPendingImpl(world, from, unitroller, comptrollerImpl)
     )
   ];
 }
 
-export async function processUnitrollerEvent(
-  world: World,
-  event: Event,
-  from: string | null
-): Promise<World> {
+export async function processUnitrollerEvent(world: World, event: Event, from: string | null): Promise<World> {
   return await processCommandEvent<any>('Unitroller', unitrollerCommands(), world, event, from);
 }

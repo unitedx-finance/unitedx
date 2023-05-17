@@ -1,4 +1,4 @@
-module.exports = async function ({ getNamedAccounts, deployments }) {
+module.exports = async function({ getNamedAccounts, deployments }) {
   const { deploy } = deployments;
 
   const { deployer } = await getNamedAccounts();
@@ -6,7 +6,7 @@ module.exports = async function ({ getNamedAccounts, deployments }) {
   await deploy("GovernorBravoDelegate", {
     from: deployer,
     log: true,
-    deterministicDeployment: false,
+    deterministicDeployment: false
   });
 };
 

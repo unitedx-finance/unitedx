@@ -235,7 +235,7 @@ export async function buildComptrollerImpl(
         };
       }
     ),
-  
+
     new Fetcher<{ name: StringV }, ComptrollerImplData>(
       `
         #### StandardG5
@@ -338,12 +338,7 @@ export async function buildComptrollerImpl(
     )
   ];
 
-  let comptrollerImplData = await getFetcherValue<any, ComptrollerImplData>(
-    'DeployComptrollerImpl',
-    fetchers,
-    world,
-    event
-  );
+  let comptrollerImplData = await getFetcherValue<any, ComptrollerImplData>('DeployComptrollerImpl', fetchers, world, event);
   let invokation = comptrollerImplData.invokation;
   delete comptrollerImplData.invokation;
 

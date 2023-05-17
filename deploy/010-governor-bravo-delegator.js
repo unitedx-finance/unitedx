@@ -16,10 +16,10 @@ module.exports = async function({ getNamedAccounts, deployments }) {
       delegate.address,
       40320,
       20160,
-      ethers.utils.parseEther("50000"),
+      ethers.utils.parseEther("50000")
     ],
     log: true,
-    deterministicDeployment: false,
+    deterministicDeployment: false
   });
 };
 

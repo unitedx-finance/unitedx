@@ -7,12 +7,7 @@ export class Settings {
   from: string | undefined;
   printTxLogs: boolean = false;
 
-  constructor(
-    basePath: string | null,
-    network: string | null,
-    aliases: { [name: string]: string },
-    from?: string
-  ) {
+  constructor(basePath: string | null, network: string | null, aliases: { [name: string]: string }, from?: string) {
     this.basePath = basePath;
     this.network = network;
     this.aliases = aliases;
@@ -72,9 +67,7 @@ export class Settings {
   }
 
   findAlias(name: string): string | null {
-    const alias = Object.entries(this.aliases).find(
-      ([alias, addr]) => alias.toLowerCase() === name.toLowerCase()
-    );
+    const alias = Object.entries(this.aliases).find(([alias, addr]) => alias.toLowerCase() === name.toLowerCase());
 
     if (alias) {
       return alias[1];

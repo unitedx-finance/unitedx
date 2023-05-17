@@ -20,53 +20,22 @@ async function genTimelock(world: World, from: string, params: Event): Promise<W
 }
 
 async function acceptAdmin(world: World, from: string, timeLock: Timelock): Promise<World> {
-  return addAction(
-    world,
-    `Set Timelock admin to ${from}`,
-    await invoke(world, timeLock.methods.acceptAdmin(), from)
-  );
+  return addAction(world, `Set Timelock admin to ${from}`, await invoke(world, timeLock.methods.acceptAdmin(), from));
 }
 
-async function setPendingAdmin(
-  world: World,
-  from: string,
-  timeLock: Timelock,
-  admin: string
-): Promise<World> {
-  return addAction(
-    world,
-    `Set Timelock admin to ${admin}`,
-    await invoke(world, timeLock.methods.setPendingAdmin(admin), from)
-  );
+async function setPendingAdmin(world: World, from: string, timeLock: Timelock, admin: string): Promise<World> {
+  return addAction(world, `Set Timelock admin to ${admin}`, await invoke(world, timeLock.methods.setPendingAdmin(admin), from));
 }
 
-async function setAdmin(
-  world: World,
-  from: string,
-  timeLock: Timelock,
-  admin: string
-): Promise<World> {
-  return addAction(
-    world,
-    `Set Timelock admin to ${admin}`,
-    await invoke(world, timeLock.methods.harnessSetAdmin(admin), from)
-  );
+async function setAdmin(world: World, from: string, timeLock: Timelock, admin: string): Promise<World> {
+  return addAction(world, `Set Timelock admin to ${admin}`, await invoke(world, timeLock.methods.harnessSetAdmin(admin), from));
 }
 
 async function setDelay(world: World, from: string, timeLock: Timelock, delay: NumberV): Promise<World> {
-  return addAction(
-    world,
-    `Set Timelock delay to ${delay.show()}`,
-    await invoke(world, timeLock.methods.setDelay(delay.encode()), from)
-  );
+  return addAction(world, `Set Timelock delay to ${delay.show()}`, await invoke(world, timeLock.methods.setDelay(delay.encode()), from));
 }
 
-async function harnessFastForward(
-  world: World,
-  from: string,
-  timeLock: Timelock,
-  seconds: NumberV
-): Promise<World> {
+async function harnessFastForward(world: World, from: string, timeLock: Timelock, seconds: NumberV): Promise<World> {
   return addAction(
     world,
     `Set Timelock blockTimestamp forward by ${seconds.show()}`,
@@ -74,12 +43,7 @@ async function harnessFastForward(
   );
 }
 
-async function harnessSetBlockTimestamp(
-  world: World,
-  from: string,
-  timeLock: Timelock,
-  seconds: NumberV
-): Promise<World> {
+async function harnessSetBlockTimestamp(world: World, from: string, timeLock: Timelock, seconds: NumberV): Promise<World> {
   return addAction(
     world,
     `Set Timelock blockTimestamp to ${seconds.show()}`,
@@ -106,11 +70,7 @@ async function queueTransaction(
     `Queue transaction on Timelock with target: ${target}\nvalue: ${value.show()}\nsignature: ${signature}\ndata: ${data} (args: ${dataArgs.join(
       ', '
     )})\neta: ${etaString} (${dateFromEta.toString()})`,
-    await invoke(
-      world,
-      timeLock.methods.queueTransaction(target, value.encode(), signature, data, eta.encode()),
-      from
-    )
+    await invoke(world, timeLock.methods.queueTransaction(target, value.encode(), signature, data, eta.encode()), from)
   );
 }
 
@@ -127,11 +87,7 @@ async function cancelTransaction(
   return addAction(
     world,
     `Cancel transaction on Timelock with target: ${target} value: ${value.show()} signature: ${signature} data: ${data} eta: ${eta.show()}`,
-    await invoke(
-      world,
-      timeLock.methods.cancelTransaction(target, value.encode(), signature, data, eta.encode()),
-      from
-    )
+    await invoke(world, timeLock.methods.cancelTransaction(target, value.encode(), signature, data, eta.encode()), from)
   );
 }
 
@@ -154,20 +110,11 @@ async function executeTransaction(
     `Execute transaction on Timelock with target: ${target}\nvalue: ${value.show()}\nsignature: ${signature}\ndata: ${data} (args: ${dataArgs.join(
       ', '
     )})\neta: ${etaString} (${dateFromEta.toString()})`,
-    await invoke(
-      world,
-      timeLock.methods.executeTransaction(target, value.encode(), signature, data, eta.encode()),
-      from
-    )
+    await invoke(world, timeLock.methods.executeTransaction(target, value.encode(), signature, data, eta.encode()), from)
   );
 }
 
-async function verifyTimelock(
-  world: World,
-  timelock: Timelock,
-  apiKey: string,
-  contractName: string
-): Promise<World> {
+async function verifyTimelock(world: World, timelock: Timelock, apiKey: string, contractName: string): Promise<World> {
   if (world.isLocalNetwork()) {
     world.printer.printLine(`Politely declining to verify on local network: ${world.network}.`);
   } else {
@@ -281,7 +228,11 @@ export function timelockCommands() {
         new Arg('data', getCoreValue, { variadic: true, mapped: true })
       ],
       (world, from, { timelock, target, value, signature, data, eta }) => {
-        const encodedData = encodeParameters(world, signature.val, data.map(a => a.val));
+        const encodedData = encodeParameters(
+          world,
+          signature.val,
+          data.map(a => a.val)
+        );
         return queueTransaction(world, from, timelock, target.val, value, signature.val, encodedData, eta);
       }
     ),
@@ -309,7 +260,11 @@ export function timelockCommands() {
         new Arg('data', getCoreValue, { variadic: true, mapped: true })
       ],
       (world, from, { timelock, target, value, signature, data, eta }) => {
-        const encodedData = encodeParameters(world, signature.val, data.map(a => a.val));
+        const encodedData = encodeParameters(
+          world,
+          signature.val,
+          data.map(a => a.val)
+        );
         return cancelTransaction(world, from, timelock, target.val, value, signature.val, encodedData, eta);
       }
     ),
@@ -337,7 +292,11 @@ export function timelockCommands() {
         new Arg('data', getCoreValue, { variadic: true, mapped: true })
       ],
       (world, from, { timelock, target, value, signature, data, eta }) => {
-        const encodedData = encodeParameters(world, signature.val, data.map(a => a.val));
+        const encodedData = encodeParameters(
+          world,
+          signature.val,
+          data.map(a => a.val)
+        );
         return executeTransaction(world, from, timelock, target.val, value, signature.val, encodedData, eta);
       }
     ),
@@ -354,8 +313,7 @@ export function timelockCommands() {
         new Arg('apiKey', getStringV),
         new Arg('contractName', getStringV, { default: new StringV('Timelock') })
       ],
-      (world, { timelock, apiKey, contractName }) =>
-        verifyTimelock(world, timelock, apiKey.val, contractName.val)
+      (world, { timelock, apiKey, contractName }) => verifyTimelock(world, timelock, apiKey.val, contractName.val)
     )
   ];
 }

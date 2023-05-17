@@ -21,20 +21,11 @@ function serializeNetworkFile(networks: Networks): string {
 }
 
 function readNetworkFile(world: World, isABI: boolean): Promise<Networks> {
-  return readFile(
-    world,
-    getNetworkPath(world.basePath, world.network, isABI ? '-abi' : ''),
-    Map({}),
-    parseNetworkFile
-  );
+  return readFile(world, getNetworkPath(world.basePath, world.network, isABI ? '-abi' : ''), Map({}), parseNetworkFile);
 }
 
 function writeNetworkFile(world: World, networks: Networks, isABI: boolean): Promise<World> {
-  return writeFile(
-    world,
-    getNetworkPath(world.basePath, world.network, isABI ? '-abi' : ''),
-    serializeNetworkFile(networks)
-  );
+  return writeFile(world, getNetworkPath(world.basePath, world.network, isABI ? '-abi' : ''), serializeNetworkFile(networks));
 }
 
 export function storeContract(world: World, contract: Contract, name: string, extraData: ExtraData[]): World {
@@ -58,12 +49,7 @@ export function storeContract(world: World, contract: Contract, name: string, ex
   return world;
 }
 
-export async function saveContract<T>(
-  world: World,
-  contract: Contract,
-  name: string,
-  extraData: ExtraData[]
-): Promise<World> {
+export async function saveContract<T>(world: World, contract: Contract, name: string, extraData: ExtraData[]): Promise<World> {
   let networks = await readNetworkFile(world, false);
   let networksABI = await readNetworkFile(world, true);
 
@@ -80,13 +66,7 @@ export async function saveContract<T>(
 }
 
 // Merges a contract into another, which is important for delegation
-export async function mergeContractABI(
-  world: World,
-  targetName: string,
-  contractTarget: Contract,
-  a: string,
-  b: string
-): Promise<World> {
+export async function mergeContractABI(world: World, targetName: string, contractTarget: Contract, a: string, b: string): Promise<World> {
   let networks = await readNetworkFile(world, false);
   let networksABI = await readNetworkFile(world, true);
   let aABI = networksABI.get(a);
@@ -117,7 +97,7 @@ export async function mergeContractABI(
   /// XXXS
   world = world.setIn(
     ['contractIndex', contractTarget._address.toLowerCase()],
-    setContractName(targetName, <Contract><unknown>mergedContract)
+    setContractName(targetName, <Contract>(<unknown>mergedContract))
   );
 
   // Don't write during a dry-run
@@ -150,14 +130,10 @@ function updateEventDecoder(world: World, contract: any) {
       };
     }, world.eventDecoder);
 
-  return world.set('eventDecoder', updatedEventDecoder)
+  return world.set('eventDecoder', updatedEventDecoder);
 }
 
-export async function loadContractData(
-  world: World,
-  networks: Networks,
-  networksABI: Networks
-): Promise<[World, string[]]> {
+export async function loadContractData(world: World, networks: Networks, networksABI: Networks): Promise<[World, string[]]> {
   // Pull off contracts value and the rest is "extra"
   let contractInfo: string[] = [];
   let contracts = networks.get('Contracts') || Map({});
@@ -172,7 +148,7 @@ export async function loadContractData(
 
     // Store the contract
     // XXXS
-    return world.setIn(['contractIndex', (<any>contract)._address.toLowerCase()], setContractName(name, <Contract><unknown>contract));
+    return world.setIn(['contractIndex', (<any>contract)._address.toLowerCase()], setContractName(name, <Contract>(<unknown>contract)));
   }, world);
 
   world = world.update('contractData', contractData => contractData.mergeDeep(networks));

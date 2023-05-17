@@ -1,7 +1,7 @@
 let rand = x => new bn(Math.floor(Math.random() * x));
 let range = count => [...Array(count).keys()];
 
-const bn = require('bignumber.js');
+const bn = require("bignumber.js");
 bn.config({ ROUNDING_MODE: bn.ROUND_HALF_DOWN });
 
 const RUN_COUNT = 20;
@@ -25,7 +25,7 @@ expect.extend({
     let eventStr = events
       .filter(({ action, failed }) => !failed)
       .map(event => `${JSON.stringify(event)},`)
-      .join('\n');
+      .join("\n");
 
     return {
       pass: !!assertion(expected, actual),
@@ -33,14 +33,14 @@ expect.extend({
         Expected: ${JSON.stringify(expected)},
         Actual: ${JSON.stringify(actual)},
         Reason: ${reason}
-        State: \n${JSON.stringify(state, null, '\t')}
+        State: \n${JSON.stringify(state, null, "\t")}
         Events:\n${eventStr}
       `
     };
   }
 });
 
-describe.skip('CompWheelFuzzTest', () => {
+describe.skip("CompWheelFuzzTest", () => {
   // This whole test is fake, but we're testing to see if our equations match reality.
 
   // First, we're going to build a simple simulator of the Compound protocol
@@ -53,13 +53,18 @@ describe.skip('CompWheelFuzzTest', () => {
     return src || new bn(0);
   };
 
-  let isPositive = (src) => {
-    assert(bn.isBigNumber(src), "isPositive got wrong type: expected bigNumber");
+  let isPositive = src => {
+    assert(
+      bn.isBigNumber(src),
+      "isPositive got wrong type: expected bigNumber"
+    );
     return src.decimalPlaces(PRECISION_DECIMALS).isGreaterThan(0);
-  }
+  };
 
   let almostEqual = (expected, actual) => {
-    return expected.decimalPlaces(PRECISION_DECIMALS).eq(actual.decimalPlaces(PRECISION_DECIMALS));
+    return expected
+      .decimalPlaces(PRECISION_DECIMALS)
+      .eq(actual.decimalPlaces(PRECISION_DECIMALS));
   };
 
   let deepCopy = src => {
@@ -209,7 +214,7 @@ describe.skip('CompWheelFuzzTest', () => {
 
     return {
       ...state,
-      compAccruedWithCrank: compAccruedWithCrank,
+      compAccruedWithCrank: compAccruedWithCrank
     };
   };
 
@@ -382,7 +387,7 @@ describe.skip('CompWheelFuzzTest', () => {
   };
 
   let mine = {
-    action: 'mine',
+    action: "mine",
     rate: 10,
     run: (globals, state, {}, { assert }) => {
       return state;
@@ -395,7 +400,7 @@ describe.skip('CompWheelFuzzTest', () => {
   };
 
   let gift = {
-    action: 'gift',
+    action: "gift",
     rate: 3,
     run: (globals, state, { amount }, { assert }) => {
       amount = new bn(amount);
@@ -412,7 +417,7 @@ describe.skip('CompWheelFuzzTest', () => {
   };
 
   let test = {
-    action: 'test',
+    action: "test",
     run: (globals, state, { amount }, { assert }) => {
       console.log(state);
       return state;
@@ -420,7 +425,7 @@ describe.skip('CompWheelFuzzTest', () => {
   };
 
   let borrow = {
-    action: 'borrow',
+    action: "borrow",
     rate: 10,
     run: (globals, state, { account, amount }, { assert }) => {
       amount = new bn(amount);
@@ -430,7 +435,7 @@ describe.skip('CompWheelFuzzTest', () => {
       let newTotalCash = state.totalCash.minus(amount);
       assert(
         isPositive(newTotalCash.plus(state.totalReserves)),
-        'Attempted to borrow more than total cash'
+        "Attempted to borrow more than total cash"
       );
 
       let newBorrowBalance = getAccruedBorrowBalance(state, account).plus(
@@ -440,7 +445,7 @@ describe.skip('CompWheelFuzzTest', () => {
         get(state.balances[account])
           .times(getExchangeRate(state))
           .isGreaterThan(newBorrowBalance),
-        'Borrower undercollateralized'
+        "Borrower undercollateralized"
       );
 
       return {
@@ -466,7 +471,7 @@ describe.skip('CompWheelFuzzTest', () => {
   };
 
   let repayBorrow = {
-    action: 'repayBorrow',
+    action: "repayBorrow",
     rate: 10,
     run: (globals, state, { account, amount }, { assert }) => {
       amount = new bn(amount);
@@ -474,7 +479,7 @@ describe.skip('CompWheelFuzzTest', () => {
       state = borrowerFlywheelByIndex(globals, state, account);
 
       let accruedBorrowBalance = getAccruedBorrowBalance(state, account);
-      assert(isPositive(accruedBorrowBalance), 'No active borrow');
+      assert(isPositive(accruedBorrowBalance), "No active borrow");
 
       let newTotalBorrows;
 
@@ -503,7 +508,7 @@ describe.skip('CompWheelFuzzTest', () => {
   };
 
   let mint = {
-    action: 'mint',
+    action: "mint",
     rate: 10,
     run: (globals, state, { account, amount }, { assert }) => {
       amount = new bn(amount);
@@ -532,7 +537,7 @@ describe.skip('CompWheelFuzzTest', () => {
   };
 
   let redeem = {
-    action: 'redeem',
+    action: "redeem",
     rate: 10,
     run: (globals, state, { account, tokens }, { assert }) => {
       tokens = new bn(tokens);
@@ -540,7 +545,10 @@ describe.skip('CompWheelFuzzTest', () => {
       state = supplierFlywheelByIndex(globals, state, account);
 
       let balance = get(state.balances[account]);
-      assert(balance.isGreaterThan(tokens), 'Redeem fails for insufficient balance');
+      assert(
+        balance.isGreaterThan(tokens),
+        "Redeem fails for insufficient balance"
+      );
       let exchangeRate = getExchangeRate(state);
       let amount = tokens.times(exchangeRate);
 
@@ -575,7 +583,7 @@ describe.skip('CompWheelFuzzTest', () => {
   let generateGlobals = () => {
     return {
       blockNumber: new bn(1000),
-      accounts: ['Adam Savage', 'Ben Solo', 'Jeffrey Lebowski']
+      accounts: ["Adam Savage", "Ben Solo", "Jeffrey Lebowski"]
     };
   };
 

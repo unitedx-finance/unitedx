@@ -40,13 +40,7 @@ import { toEncodableNum } from './Encoding';
 import { BigNumber } from 'bignumber.js';
 import { buildContractFetcher } from './EventBuilder';
 
-import {
-  padLeft,
-  sha3,
-  toBN,
-  toDecimal,
-  toHex
-} from 'web3-utils';
+import { padLeft, sha3, toBN, toDecimal, toHex } from 'web3-utils';
 
 const expMantissa = new BigNumber('1000000000000000000');
 
@@ -200,10 +194,12 @@ export async function getMapV(world: World, event: Event): Promise<MapV> {
 export function getArrayV<T extends Value>(fetcher: (World, Event) => Promise<T>): (World, Event) => Promise<ArrayV<T>> {
   return async (world: World, event: Event): Promise<ArrayV<T>> => {
     const res = await Promise.all(
-      mustArray(event).filter((x) => x !== 'List').map(e => fetcher(world, e))
+      mustArray(event)
+        .filter(x => x !== 'List')
+        .map(e => fetcher(world, e))
     );
     return new ArrayV(res);
-  }
+  };
 }
 
 export async function getStringV(world: World, event: Event): Promise<StringV> {
@@ -258,8 +254,7 @@ const fetchers = [
     `,
     'UInt96Max',
     [],
-    async (world, {}) =>
-      new NumberV('79228162514264337593543950335')
+    async (world, {}) => new NumberV('79228162514264337593543950335')
   ),
 
   new Fetcher<{}, NumberV>(
@@ -270,8 +265,7 @@ const fetchers = [
     `,
     'UInt256Max',
     [],
-    async (world, {}) =>
-      new NumberV('115792089237316195423570985008687907853269984665640564039457584007913129639935')
+    async (world, {}) => new NumberV('115792089237316195423570985008687907853269984665640564039457584007913129639935')
   ),
 
   new Fetcher<{}, NumberV>(
@@ -306,7 +300,7 @@ const fetchers = [
     'Exactly',
     [new Arg('amt', getEventV)],
     async (world, { amt }) => getNumberV(world, amt.val)
-    ),
+  ),
 
   new Fetcher<{ hexVal: EventV }, StringV>(
     `
@@ -412,25 +406,21 @@ const fetchers = [
     async (world, { num }) => num
   ),
 
-  new Fetcher<
-    { addr: AddressV; slot: NumberV; start: NumberV; valType: StringV },
-    BoolV | AddressV | ExpNumberV | NothingV
-  >(
+  new Fetcher<{ addr: AddressV; slot: NumberV; start: NumberV; valType: StringV }, BoolV | AddressV | ExpNumberV | NothingV>(
     `
     #### StorageAt
 
     * "StorageAt addr:<Address> slot:<Number> start:<Number>, valType:<VToCastTo>" - Returns bytes at storage slot
     `,
     'StorageAt',
-    [
-      new Arg('addr', getAddressV),
-      new Arg('slot', getNumberV),
-      new Arg('start', getNumberV),
-      new Arg('valType', getStringV)
-    ],
+    [new Arg('addr', getAddressV), new Arg('slot', getNumberV), new Arg('start', getNumberV), new Arg('valType', getStringV)],
     async (world, { addr, slot, start, valType }) => {
-      const startVal = start.toNumber()
-      const reverse = s => s.split('').reverse().join('');
+      const startVal = start.toNumber();
+      const reverse = s =>
+        s
+          .split('')
+          .reverse()
+          .join('');
       const storage = await world.web3.eth.getStorageAt(addr.val, slot.toNumber());
       const stored = reverse(storage.slice(2)); // drop leading 0x and reverse since items are packed from the back of the slot
 
@@ -448,10 +438,7 @@ const fetchers = [
     }
   ),
 
-  new Fetcher<
-    { addr: AddressV; slot: NumberV; key: AddressV; nestedKey: AddressV; valType: StringV },
-    ListV | NothingV
-  >(
+  new Fetcher<{ addr: AddressV; slot: NumberV; key: AddressV; nestedKey: AddressV; valType: StringV }, ListV | NothingV>(
     `
     #### StorageAtNestedMapping
 
@@ -467,7 +454,10 @@ const fetchers = [
     ],
     async (world, { addr, slot, key, nestedKey, valType }) => {
       const areEqual = (v, x) => toBN(v).eq(toBN(x));
-      let paddedSlot = slot.toNumber().toString(16).padStart(64, '0');
+      let paddedSlot = slot
+        .toNumber()
+        .toString(16)
+        .padStart(64, '0');
       let paddedKey = padLeft(key.val, 64);
       let newKey = sha3(paddedKey + paddedSlot);
       let val = await world.web3.eth.getStorageAt(addr.val, newKey);
@@ -475,16 +465,29 @@ const fetchers = [
       switch (valType.val) {
         case 'marketStruct':
           let isListed = areEqual(val, 1);
-          let collateralFactorKey = '0x' + toBN(newKey).add(toBN(1)).toString(16);
+          let collateralFactorKey =
+            '0x' +
+            toBN(newKey)
+              .add(toBN(1))
+              .toString(16);
           let collateralFactorStr = await world.web3.eth.getStorageAt(addr.val, collateralFactorKey);
           let collateralFactor = toBN(collateralFactorStr);
-          let userMarketBaseKey = padLeft(toBN(newKey).add(toBN(2)).toString(16), 64);
+          let userMarketBaseKey = padLeft(
+            toBN(newKey)
+              .add(toBN(2))
+              .toString(16),
+            64
+          );
           let paddedSlot = padLeft(userMarketBaseKey, 64);
           let paddedKey = padLeft(nestedKey.val, 64);
           let newKeyTwo = sha3(paddedKey + paddedSlot);
           let userInMarket = await world.web3.eth.getStorageAt(addr.val, newKeyTwo);
 
-          let isCompKey = '0x' + toBN(newKey).add(toBN(3)).toString(16);
+          let isCompKey =
+            '0x' +
+            toBN(newKey)
+              .add(toBN(3))
+              .toString(16);
           let isCompStr = await world.web3.eth.getStorageAt(addr.val, isCompKey);
 
           return new ListV([
@@ -499,24 +502,19 @@ const fetchers = [
     }
   ),
 
-  new Fetcher<
-    { addr: AddressV; slot: NumberV; key: AddressV; valType: StringV },
-    AddressV | BoolV | ExpNumberV | ListV | NothingV
-  >(
+  new Fetcher<{ addr: AddressV; slot: NumberV; key: AddressV; valType: StringV }, AddressV | BoolV | ExpNumberV | ListV | NothingV>(
     `
     #### StorageAtMapping
 
     * "StorageAtMapping addr:<Address> slot:<Number>, key:<address>, valType:<VToCastTo>" - Returns bytes at storage slot
     `,
     'StorageAtMapping',
-    [
-      new Arg('addr', getAddressV),
-      new Arg('slot', getNumberV),
-      new Arg('key', getAddressV),
-      new Arg('valType', getStringV)
-    ],
+    [new Arg('addr', getAddressV), new Arg('slot', getNumberV), new Arg('key', getAddressV), new Arg('valType', getStringV)],
     async (world, { addr, slot, key, valType }) => {
-      let paddedSlot = slot.toNumber().toString(16).padStart(64, '0');
+      let paddedSlot = slot
+        .toNumber()
+        .toString(16)
+        .padStart(64, '0');
       let paddedKey = padLeft(key.val, 64);
       let newKey = sha3(paddedKey + paddedSlot);
       let val = await world.web3.eth.getStorageAt(addr.val, newKey);
@@ -575,7 +573,7 @@ const fetchers = [
     `,
     'LastContract',
     [],
-    async (world, { }) => new AddressV(world.get('lastContract'))
+    async (world, {}) => new AddressV(world.get('lastContract'))
   ),
 
   new Fetcher<{}, NumberV>(
@@ -586,7 +584,7 @@ const fetchers = [
     `,
     'LastBlock',
     [],
-    async (world, { }) => {
+    async (world, {}) => {
       let invokation = world.get('lastInvokation');
       if (!invokation) {
         throw new Error(`Expected last invokation for "lastBlock" but none found.`);
@@ -726,7 +724,7 @@ const fetchers = [
       return new NumberV(secondsBn.plus(getCurrentTimestamp()).toFixed(0));
     }
   ),
-    new Fetcher<{}, NumberV>(
+  new Fetcher<{}, NumberV>(
     `
       #### Now
 
@@ -748,8 +746,8 @@ const fetchers = [
     'BlockTimestamp',
     [],
     async (world, {}) => {
-      const {result: blockNumber}: any = await sendRPC(world, 'eth_blockNumber', []);
-      const {result: block}: any = await sendRPC(world, 'eth_getBlockByNumber', [blockNumber, false]);
+      const { result: blockNumber }: any = await sendRPC(world, 'eth_blockNumber', []);
+      const { result: block }: any = await sendRPC(world, 'eth_getBlockByNumber', [blockNumber, false]);
       return new NumberV(parseInt(block.timestamp, 16));
     }
   ),
@@ -798,32 +796,33 @@ const fetchers = [
     async (world, { given, expected }) => new BoolV(expected.compareTo(world, given))
   ),
   new Fetcher<
-      {
-        argTypes: StringV[];
-        args: StringV[];
-      },
-      StringV
-    >(
-      `
+    {
+      argTypes: StringV[];
+      args: StringV[];
+    },
+    StringV
+  >(
+    `
         #### EncodeParameters
 
         * "EncodeParameters (...argTypes:<String>) (...args:<Anything>)
           * E.g. "EncodeParameters (\"address\" \"address\") (\"0xabc\" \"0x123\")
       `,
-      'EncodeParameters',
-      [
-        new Arg('argTypes', getStringV, { mapped: true }),
-        new Arg('args', getStringV, { mapped: true })
-      ],
-      async (world, { argTypes, args }) => {
-        const realArgs = args.map((a, i) => {
-          if (argTypes[i].val == 'address')
-            return getAddress(world, a.val);
-          return a.val;
-        });
-        return new StringV(world.web3.eth.abi.encodeParameters(argTypes.map(t => t.val), realArgs));
-      }
-    ),
+    'EncodeParameters',
+    [new Arg('argTypes', getStringV, { mapped: true }), new Arg('args', getStringV, { mapped: true })],
+    async (world, { argTypes, args }) => {
+      const realArgs = args.map((a, i) => {
+        if (argTypes[i].val == 'address') return getAddress(world, a.val);
+        return a.val;
+      });
+      return new StringV(
+        world.web3.eth.abi.encodeParameters(
+          argTypes.map(t => t.val),
+          realArgs
+        )
+      );
+    }
+  ),
   new Fetcher<{ res: Value }, Value>(
     `
       #### Unitroller
@@ -999,13 +998,13 @@ const fetchers = [
     [new Arg('res', getGovernorBravoValue, { variadic: true })],
     async (world, { res }) => res,
     { subExpressions: governorBravoFetchers() }
-  ),
+  )
 ];
 
 let contractFetchers = [
-  { contract: "Counter", implicit: false },
-  { contract: "CompoundLens", implicit: false },
-  { contract: "Reservoir", implicit: true }
+  { contract: 'Counter', implicit: false },
+  { contract: 'CompoundLens', implicit: false },
+  { contract: 'Reservoir', implicit: true }
 ];
 
 export async function getFetchers(world: World) {
@@ -1013,14 +1012,18 @@ export async function getFetchers(world: World) {
     return { world, fetchers: world.fetchers };
   }
 
-  let allFetchers = fetchers.concat(await Promise.all(contractFetchers.map(({contract, implicit}) => {
-    return buildContractFetcher(world, contract, implicit);
-  })));
+  let allFetchers = fetchers.concat(
+    await Promise.all(
+      contractFetchers.map(({ contract, implicit }) => {
+        return buildContractFetcher(world, contract, implicit);
+      })
+    )
+  );
 
   return { world: world.set('fetchers', allFetchers), fetchers: allFetchers };
 }
 
 export async function getCoreValue(world: World, event: Event): Promise<Value> {
-  let {world: nextWorld, fetchers} = await getFetchers(world);
+  let { world: nextWorld, fetchers } = await getFetchers(world);
   return await getFetcherValue<any, any>('Core', fetchers, nextWorld, event);
 }

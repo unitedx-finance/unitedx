@@ -10,7 +10,7 @@ module.exports = async function({ getNamedAccounts, deployments }) {
     from: deployer,
     args: [timeLock.address, utdx.address, deployer],
     log: true,
-    deterministicDeployment: false,
+    deterministicDeployment: false
   });
 };
 

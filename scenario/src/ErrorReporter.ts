@@ -1,12 +1,11 @@
-
 import { utils } from 'ethers';
-import {ComptrollerErr, TokenErr} from './ErrorReporterConstants';
+import { ComptrollerErr, TokenErr } from './ErrorReporterConstants';
 
 export interface ErrorReporter {
-  getError(error: any): string | null
-  getInfo(info: any): string | null
-  getDetail(error: any, detail: number): string
-  getEncodedCustomError(errorName: string, args: unknown[]): string | null
+  getError(error: any): string | null;
+  getInfo(info: any): string | null;
+  getDetail(error: any, detail: number): string;
+  getEncodedCustomError(errorName: string, args: unknown[]): string | null;
 }
 
 class NoErrorReporterType implements ErrorReporter {
@@ -23,7 +22,7 @@ class NoErrorReporterType implements ErrorReporter {
   }
 
   getEncodedCustomError(errorName: string, args: unknown[]): string | null {
-    return null
+    return null;
   }
 }
 
@@ -46,7 +45,7 @@ class CTokenErrorReporterType implements ErrorReporter {
 
   getDetail(error: any, detail: number): string {
     // Little hack to let us use proper names for cross-contract errors
-    if (this.getError(error) === "COMPTROLLER_REJECTION") {
+    if (this.getError(error) === 'COMPTROLLER_REJECTION') {
       let comptrollerError = ComptrollerErrorReporter.getError(detail);
 
       if (comptrollerError) {
@@ -59,9 +58,9 @@ class CTokenErrorReporterType implements ErrorReporter {
 
   getEncodedCustomError(errorName: string, args: unknown[]): string | null {
     try {
-      return TokenErr.CustomErrors.encodeErrorResult(errorName, args)
+      return TokenErr.CustomErrors.encodeErrorResult(errorName, args);
     } catch (err) {
-      return null
+      return null;
     }
   }
 }
@@ -86,7 +85,7 @@ class ComptrollerErrorReporterType implements ErrorReporter {
   }
 
   getDetail(error: any, detail: number): string {
-    if (this.getError(error) === "REJECTION") {
+    if (this.getError(error) === 'REJECTION') {
       let comptrollerError = ComptrollerErrorReporter.getError(detail);
 
       if (comptrollerError) {
@@ -99,9 +98,9 @@ class ComptrollerErrorReporterType implements ErrorReporter {
 
   getEncodedCustomError(errorName: string, args: unknown[]): string | null {
     try {
-      return ComptrollerErr.CustomErrors.encodeErrorResult(errorName, args)
+      return ComptrollerErr.CustomErrors.encodeErrorResult(errorName, args);
     } catch (err) {
-      return null
+      return null;
     }
   }
 }
@@ -109,7 +108,7 @@ class ComptrollerErrorReporterType implements ErrorReporter {
 export function formatResult(errorReporter: ErrorReporter, result: any): string {
   const errorStr = errorReporter.getError(result);
   if (errorStr !== null) {
-    return `Error=${errorStr}`
+    return `Error=${errorStr}`;
   } else {
     return `Result=${result}`;
   }

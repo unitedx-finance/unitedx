@@ -1,21 +1,21 @@
-import {Event} from './Event';
+import { Event } from './Event';
 
 interface Arg {
-  arg: any
-  def: any
-  splat: any
+  arg: any;
+  def: any;
+  splat: any;
 }
 
 interface Macro {
-  args: Arg[]
-  steps: Event
+  args: Arg[];
+  steps: Event;
 }
 
-type ArgMap = {[arg: string]: Event};
-type NamedArg = { argName: string, argValue: Event };
+type ArgMap = { [arg: string]: Event };
+type NamedArg = { argName: string; argValue: Event };
 type ArgValue = Event | NamedArg;
 
-export type Macros = {[eventName: string]: Macro};
+export type Macros = { [eventName: string]: Macro };
 
 export function expandEvent(macros: Macros, event: Event): Event[] {
   const [eventName, ...eventArgs] = event;
@@ -37,26 +37,26 @@ function getArgValues(eventArgs: ArgValue[], macroArgs: Arg[]): ArgMap {
   let usedNamedArg: boolean = false;
   let usedSplat: boolean = false;
 
-  eventArgs.forEach((eventArg) => {
+  eventArgs.forEach(eventArg => {
     if (eventArg.hasOwnProperty('argName')) {
-      const {argName, argValue} = <NamedArg>eventArg;
+      const { argName, argValue } = <NamedArg>eventArg;
 
       eventArgNameMap[argName] = argValue;
       usedNamedArg = true;
     } else {
       if (usedNamedArg) {
-        throw new Error("Cannot use positional arg after named arg in macro invokation.");
+        throw new Error('Cannot use positional arg after named arg in macro invokation.');
       }
 
       eventArgIndexed.push(<Event>eventArg);
     }
   });
 
-  macroArgs.forEach(({arg, def, splat}, argIndex) => {
+  macroArgs.forEach(({ arg, def, splat }, argIndex) => {
     let val;
 
     if (usedSplat) {
-      throw new Error("Cannot have arg after splat arg");
+      throw new Error('Cannot have arg after splat arg');
     }
 
     if (eventArgNameMap[arg] !== undefined) {
@@ -69,7 +69,7 @@ function getArgValues(eventArgs: ArgValue[], macroArgs: Arg[]): ArgMap {
     } else if (def !== undefined) {
       val = def;
     } else {
-      throw new Error("Macro cannot find arg value for " + arg);
+      throw new Error('Macro cannot find arg value for ' + arg);
     }
     argValues[arg] = val;
   });
@@ -81,7 +81,7 @@ export function expandMacro(macro: Macro, event: Event): Event[] {
   const argValues = getArgValues(<ArgValue[]>event, macro.args);
 
   function expandStep(step) {
-    return step.map((token) => {
+    return step.map(token => {
       if (argValues[token] !== undefined) {
         return argValues[token];
       } else {
@@ -92,7 +92,7 @@ export function expandMacro(macro: Macro, event: Event): Event[] {
         }
       }
     });
-  };
+  }
 
   return macro.steps.map(expandStep);
 }

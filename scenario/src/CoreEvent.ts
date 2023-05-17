@@ -1,12 +1,4 @@
-import {
-  addAction,
-  checkExpectations,
-  checkInvariants,
-  clearInvariants,
-  holdInvariants,
-  setEvent,
-  World
-} from './World';
+import { addAction, checkExpectations, checkInvariants, clearInvariants, holdInvariants, setEvent, World } from './World';
 import { Event } from './Event';
 import { getAddressV, getEventV, getNumberV, getStringV } from './CoreValue';
 import { AddressV, EventV, NothingV, NumberV, StringV, Value } from './Value';
@@ -84,9 +76,7 @@ export async function processEvents(originalWorld: World, events: Event[]): Prom
     if (!world) {
       throw new Error(`Encountered null world result when processing event ${event[0]}: ${world}`);
     } else if (!(world instanceof World)) {
-      throw new Error(
-        `Encountered world result which was not isWorld when processing event ${event[0]}: ${world}`
-      );
+      throw new Error(`Encountered world result which was not isWorld when processing event ${event[0]}: ${world}`);
     }
 
     return world;
@@ -177,8 +167,8 @@ export const commands: (View<any> | ((world: World) => Promise<View<any>>))[] = 
     'SleepBlocks',
     [new Arg('blocks', getNumberV)],
     async (world, { blocks }) => {
-      const targetBlockNumber = blocks.toNumber() + await getCurrentBlockNumber(world);
-      while (await getCurrentBlockNumber(world) < targetBlockNumber) {
+      const targetBlockNumber = blocks.toNumber() + (await getCurrentBlockNumber(world));
+      while ((await getCurrentBlockNumber(world)) < targetBlockNumber) {
         await sleep(1000);
       }
       return world;
@@ -194,8 +184,8 @@ export const commands: (View<any> | ((world: World) => Promise<View<any>>))[] = 
     'SleepUntilBlock',
     [new Arg('blockNumber', getNumberV)],
     async (world, { blockNumber }) => {
-      const delay = blockNumber.toNumber() - await getCurrentBlockNumber(world);
-      while (blockNumber.toNumber() > await getCurrentBlockNumber(world)) {
+      const delay = blockNumber.toNumber() - (await getCurrentBlockNumber(world));
+      while (blockNumber.toNumber() > (await getCurrentBlockNumber(world))) {
         await sleep(1000);
       }
       return world;
@@ -263,7 +253,7 @@ export const commands: (View<any> | ((world: World) => Promise<View<any>>))[] = 
     `,
     'PrintTransactionLogs',
     [],
-    async (world, { }) => {
+    async (world, {}) => {
       return await world.updateSettings(async settings => {
         settings.printTxLogs = true;
 
@@ -279,14 +269,16 @@ export const commands: (View<any> | ((world: World) => Promise<View<any>>))[] = 
         * E.g. "Web3Fork \"https://mainnet.infura.io/v3/e1a5d4d2c06a4e81945fca56d0d5d8ea\" (\"0x8b8592e9570e96166336603a1b4bd1e8db20fa20\")"
     `,
     'Web3Fork',
-    [
-      new Arg('url', getStringV),
-      new Arg('unlockedAccounts', getAddressV, { default: [], mapped: true })
-    ],
-    async (world, { url, unlockedAccounts }) => fork(world, url.val, unlockedAccounts.map(v => v.val))
+    [new Arg('url', getStringV), new Arg('unlockedAccounts', getAddressV, { default: [], mapped: true })],
+    async (world, { url, unlockedAccounts }) =>
+      fork(
+        world,
+        url.val,
+        unlockedAccounts.map(v => v.val)
+      )
   ),
 
-  new View<{ networkVal: StringV; }>(
+  new View<{ networkVal: StringV }>(
     `
       #### UseConfigs
 
@@ -297,13 +289,16 @@ export const commands: (View<any> | ((world: World) => Promise<View<any>>))[] = 
     [new Arg('networkVal', getStringV)],
     async (world, { networkVal }) => {
       const network = networkVal.val;
-      if (world.basePath && (network === 'mainnet' || network === 'kovan' || network === 'goerli' || network === 'rinkeby' || network == 'ropsten')) {
+      if (
+        world.basePath &&
+        (network === 'mainnet' || network === 'kovan' || network === 'goerli' || network === 'rinkeby' || network == 'ropsten')
+      ) {
         let newWorld = world.set('network', network);
         let contractInfo;
         [newWorld, contractInfo] = await loadContracts(newWorld);
         if (contractInfo.length > 0) {
           world.printer.printLine(`Contracts:`);
-          contractInfo.forEach((info) => world.printer.printLine(`\t${info}`));
+          contractInfo.forEach(info => world.printer.printLine(`\t${info}`));
         }
 
         return newWorld;
@@ -421,7 +416,7 @@ export const commands: (View<any> | ((world: World) => Promise<View<any>>))[] = 
     `,
     'MineBlock',
     [],
-    async (world, { }) => {
+    async (world, {}) => {
       await sendRPC(world, 'evm_mine', []);
       return world;
     }
@@ -437,12 +432,12 @@ export const commands: (View<any> | ((world: World) => Promise<View<any>>))[] = 
     'SetBlockNumber',
     [new Arg('blockNumber', getNumberV)],
     async (world, from, { blockNumber }) => {
-      await sendRPC(world, 'evm_mineBlockNumber', [blockNumber.toNumber() - 1])
+      await sendRPC(world, 'evm_mineBlockNumber', [blockNumber.toNumber() - 1]);
       return world;
     }
   ),
 
-  new Command<{ blockNumber: NumberV, event: EventV }>(
+  new Command<{ blockNumber: NumberV; event: EventV }>(
     `
       #### Block
 
@@ -450,12 +445,9 @@ export const commands: (View<any> | ((world: World) => Promise<View<any>>))[] = 
         * E.g. "Block 10 (Comp Deploy Admin)"
     `,
     'Block',
-    [
-      new Arg('blockNumber', getNumberV),
-      new Arg('event', getEventV)
-    ],
+    [new Arg('blockNumber', getNumberV), new Arg('event', getEventV)],
     async (world, from, { blockNumber, event }) => {
-      await sendRPC(world, 'evm_mineBlockNumber', [blockNumber.toNumber() - 2])
+      await sendRPC(world, 'evm_mineBlockNumber', [blockNumber.toNumber() - 2]);
       return await processCoreEvent(world, event.val, from);
     }
   ),
@@ -484,7 +476,7 @@ export const commands: (View<any> | ((world: World) => Promise<View<any>>))[] = 
     `,
     'Inspect',
     [],
-    async (world, { }) => inspect(world, null)
+    async (world, {}) => inspect(world, null)
   ),
 
   new View<{ message: StringV }>(
@@ -847,9 +839,9 @@ export const commands: (View<any> | ((world: World) => Promise<View<any>>))[] = 
     { subExpressions: governorBravoCommands() }
   ),
 
-  buildContractEvent<Counter>("Counter", false),
-  buildContractEvent<CompoundLens>("CompoundLens", false),
-  buildContractEvent<Reservoir>("Reservoir", true),
+  buildContractEvent<Counter>('Counter', false),
+  buildContractEvent<CompoundLens>('CompoundLens', false),
+  buildContractEvent<Reservoir>('Reservoir', true),
 
   new View<{ event: EventV }>(
     `
@@ -875,13 +867,15 @@ async function getCommands(world: World) {
     return { world, commands: world.commands };
   }
 
-  let allCommands = await Promise.all(commands.map((command) => {
-    if (typeof (command) === 'function') {
-      return command(world);
-    } else {
-      return Promise.resolve(command);
-    }
-  }));
+  let allCommands = await Promise.all(
+    commands.map(command => {
+      if (typeof command === 'function') {
+        return command(world);
+      } else {
+        return Promise.resolve(command);
+      }
+    })
+  );
 
   return { world: world.set('commands', allCommands), commands: allCommands };
 }

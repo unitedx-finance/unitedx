@@ -11,7 +11,7 @@ module.exports = async function({ getNamedAccounts, deployments }) {
     from: deployer,
     log: true,
     deterministicDeployment: false,
-    contract: "SimplePriceOracle",
+    contract: "SimplePriceOracle"
   });
 
   const chainId = await getChainId();
@@ -21,7 +21,7 @@ module.exports = async function({ getNamedAccounts, deployments }) {
     log: true,
     deterministicDeployment: false,
     contract: "OracleAggregatorV1",
-    args: [A3O_WRAPPER.get(chainId)],
+    args: [A3O_WRAPPER.get(chainId)]
   });
 };
 

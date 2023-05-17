@@ -7,7 +7,7 @@ module.exports = async function({ getNamedAccounts, deployments }) {
     from: deployer,
     log: true,
     deterministicDeployment: false,
-    autoMine: true,
+    autoMine: true
   });
 };
 

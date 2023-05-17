@@ -39,10 +39,8 @@ export function mustString(arg: Event): string {
 }
 
 export function rawValues(args) {
-  if (Array.isArray(args))
-    return args.map(rawValues);
-  if (Array.isArray(args.val))
-    return args.val.map(rawValues);
+  if (Array.isArray(args)) return args.map(rawValues);
+  if (Array.isArray(args.val)) return args.val.map(rawValues);
   return args.val;
 }
 
@@ -99,7 +97,6 @@ export function getCurrentTimestamp(): number {
   return Math.floor(Date.now() / 1000);
 }
 
-
 export function sleep(timeout: number): Promise<void> {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
@@ -110,7 +107,7 @@ export function sleep(timeout: number): Promise<void> {
 
 export function sendRPC(world: World, method: string, params: any[]) {
   return new Promise((resolve, reject) => {
-    if (!world.web3.currentProvider || typeof (world.web3.currentProvider) === 'string') {
+    if (!world.web3.currentProvider || typeof world.web3.currentProvider === 'string') {
       return reject(`cannot send from currentProvider=${world.web3.currentProvider}`);
     }
 

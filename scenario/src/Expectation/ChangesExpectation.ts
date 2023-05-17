@@ -1,10 +1,10 @@
-import {Expectation} from '../Expectation';
-import {fail, World} from '../World';
-import {getCoreValue} from '../CoreValue';
-import {Value, NumberV} from '../Value';
-import {Event} from '../Event';
-import {formatEvent} from '../Formatter';
-import {BigNumber} from 'bignumber.js';
+import { Expectation } from '../Expectation';
+import { fail, World } from '../World';
+import { getCoreValue } from '../CoreValue';
+import { Value, NumberV } from '../Value';
+import { Event } from '../Event';
+import { formatEvent } from '../Formatter';
+import { BigNumber } from 'bignumber.js';
 
 function asNumberV(v: Value): NumberV {
   if (v instanceof NumberV) {
@@ -31,9 +31,9 @@ export class ChangesExpectation implements Expectation {
 
   async getCurrentValue(world: World): Promise<Value> {
     return await getCoreValue(world, this.condition);
-  };
+  }
 
-  async checker(world: World, initialCheck: boolean=false): Promise<void> {
+  async checker(world: World, initialCheck: boolean = false): Promise<void> {
     const currentValue = asNumberV(await this.getCurrentValue(world));
     const trueDelta = currentValue.sub(this.originalValue);
 
@@ -47,6 +47,8 @@ export class ChangesExpectation implements Expectation {
   }
 
   toString() {
-    return `ChangesExpectation: condition=${formatEvent(this.condition)}, originalValue=${this.originalValue.toString()}, delta=${this.delta.toString()}, expected=${this.expected.toString()}`;
+    return `ChangesExpectation: condition=${formatEvent(
+      this.condition
+    )}, originalValue=${this.originalValue.toString()}, delta=${this.delta.toString()}, expected=${this.expected.toString()}`;
   }
 }

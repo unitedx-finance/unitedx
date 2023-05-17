@@ -2,23 +2,8 @@ import { Event } from '../Event';
 import { fail, World } from '../World';
 import { getCoreValue } from '../CoreValue';
 import { Failure, InvokationRevertCustomError, InvokationRevertFailure } from '../Invokation';
-import {
-  getEventV,
-  getMapV,
-  getNumberV,
-  getStringV
-} from '../CoreValue';
-import {
-  AddressV,
-  BoolV,
-  EventV,
-  ListV,
-  MapV,
-  NumberV,
-  Order,
-  StringV,
-  Value
-} from '../Value';
+import { getEventV, getMapV, getNumberV, getStringV } from '../CoreValue';
+import { AddressV, BoolV, EventV, ListV, MapV, NumberV, Order, StringV, Value } from '../Value';
 import { Arg, View, processCommandEvent } from '../Command';
 import { rawValues } from '../Utils';
 
@@ -60,7 +45,10 @@ async function assertFailure(world: World, failure: Failure): Promise<World> {
   }
 
   if (world.lastInvokation.success()) {
-    return fail(world, `Expected ${failure.toString()}, but last invokation was successful with result ${JSON.stringify(world.lastInvokation.value)}.`);
+    return fail(
+      world,
+      `Expected ${failure.toString()}, but last invokation was successful with result ${JSON.stringify(world.lastInvokation.value)}.`
+    );
   }
 
   if (world.lastInvokation.error) {
@@ -71,7 +59,7 @@ async function assertFailure(world: World, failure: Failure): Promise<World> {
     throw new Error(`Invokation requires success, failure or error, got: ${world.lastInvokation.toString()}`);
   }
 
-  if (world.lastInvokation.failures.find((f) => f.equals(failure)) === undefined) {
+  if (world.lastInvokation.failures.find(f => f.equals(failure)) === undefined) {
     return fail(world, `Expected ${failure.toString()}, but got ${world.lastInvokation.failures.toString()}.`);
   }
 
@@ -81,14 +69,15 @@ async function assertFailure(world: World, failure: Failure): Promise<World> {
 // coverage tests don't currently support checking full message given with a revert
 function coverageSafeRevertMessage(world: World, message: string): string {
   if (world.network === 'coverage') {
-    return "revert";
+    return 'revert';
   } else {
     return message;
   }
 }
 
 async function assertRevertFailure(world: World, err: string, message: string): Promise<World> {
-  if (world.network === 'coverage') { // coverage doesn't have detailed message, thus no revert failures
+  if (world.network === 'coverage') {
+    // coverage doesn't have detailed message, thus no revert failures
     return await assertRevert(world, message);
   }
 
@@ -97,7 +86,10 @@ async function assertRevertFailure(world: World, err: string, message: string): 
   }
 
   if (world.lastInvokation.success()) {
-    return fail(world, `Expected revert failure, but last invokation was successful with result ${JSON.stringify(world.lastInvokation.value)}.`);
+    return fail(
+      world,
+      `Expected revert failure, but last invokation was successful with result ${JSON.stringify(world.lastInvokation.value)}.`
+    );
   }
 
   if (world.lastInvokation.failures.length > 0) {
@@ -109,21 +101,26 @@ async function assertRevertFailure(world: World, err: string, message: string): 
   }
 
   if (!(world.lastInvokation.error instanceof InvokationRevertFailure)) {
-    throw new Error(`Invokation error mismatch, expected revert failure: "${err}, ${message}", got: "${world.lastInvokation.error.toString()}"`);
+    throw new Error(
+      `Invokation error mismatch, expected revert failure: "${err}, ${message}", got: "${world.lastInvokation.error.toString()}"`
+    );
   }
 
   const expectedMessage = `VM Exception while processing transaction: ${coverageSafeRevertMessage(world, message)}`;
 
   if (world.lastInvokation.error.error !== err || world.lastInvokation.error.errMessage !== expectedMessage) {
-    throw new Error(`Invokation error mismatch, expected revert failure: err=${err}, message="${expectedMessage}", got: "${world.lastInvokation.error.toString()}"`);
+    throw new Error(
+      `Invokation error mismatch, expected revert failure: err=${err}, message="${expectedMessage}", got: "${world.lastInvokation.error.toString()}"`
+    );
   }
 
   return world;
 }
 
 async function assertRevertCustomError(world: World, err: string, args: unknown[]): Promise<World> {
-  if (world.network === 'coverage') { // coverage doesn't have detailed message, thus no revert failures
-    return await assertRevert(world, "revert");
+  if (world.network === 'coverage') {
+    // coverage doesn't have detailed message, thus no revert failures
+    return await assertRevert(world, 'revert');
   }
 
   if (!world.lastInvokation) {
@@ -131,7 +128,10 @@ async function assertRevertCustomError(world: World, err: string, args: unknown[
   }
 
   if (world.lastInvokation.success()) {
-    return fail(world, `Expected revert failure, but last invokation was successful with result ${JSON.stringify(world.lastInvokation.value)}.`);
+    return fail(
+      world,
+      `Expected revert failure, but last invokation was successful with result ${JSON.stringify(world.lastInvokation.value)}.`
+    );
   }
 
   if (world.lastInvokation.failures.length > 0) {
@@ -149,11 +149,15 @@ async function assertRevertCustomError(world: World, err: string, args: unknown[
   const expectedResult = world.lastInvokation.errorReporter.getEncodedCustomError(err, args);
 
   if (!expectedResult) {
-    throw new Error(`Expected revert with custom error, but custom error ${err} not found`)
+    throw new Error(`Expected revert with custom error, but custom error ${err} not found`);
   }
 
   if (Object.values(world.lastInvokation.error.errorResults).findIndex(v => v.error === 'revert' && v.return === expectedResult) < 0) {
-    throw new Error(`Invokation error mismatch, expected revert custom error: err=${err}, args="${args.join(',')}", got: "${world.lastInvokation.error.toString()}"`);
+    throw new Error(
+      `Invokation error mismatch, expected revert custom error: err=${err}, args="${args.join(
+        ','
+      )}", got: "${world.lastInvokation.error.toString()}"`
+    );
   }
 
   return world;
@@ -184,7 +188,7 @@ async function assertError(world: World, message: string): Promise<World> {
 }
 
 function buildRevertMessage(world: World, message: string): string {
-  return `VM Exception while processing transaction: ${coverageSafeRevertMessage(world, message)}`
+  return `VM Exception while processing transaction: ${coverageSafeRevertMessage(world, message)}`;
 }
 
 async function assertRevert(world: World, message: string): Promise<World> {
@@ -273,7 +277,6 @@ async function assertLog(world: World, event: string, keyValues: MapV): Promise<
         });
         return fail(world, `Expected log with event \`${eventExpected}\`, found logs for this event with: [${eventDetailsFound}]`);
       }
-
     } else {
       Object.entries(keyValues.val).forEach(([key, value]) => {
         if (log.returnValues[key] === undefined) {
@@ -294,7 +297,8 @@ async function assertLog(world: World, event: string, keyValues: MapV): Promise<
 
 export function assertionCommands() {
   return [
-    new View<{ given: NumberV, expected: NumberV, tolerance: NumberV }>(`
+    new View<{ given: NumberV; expected: NumberV; tolerance: NumberV }>(
+      `
         #### Approx
 
         * "Approx given:<Value> expected:<Value> tolerance:<Value>" - Asserts that given approximately matches expected.
@@ -302,16 +306,13 @@ export function assertionCommands() {
           * E.g. "Assert Approx (CToken cZRX TotalSupply) (Exactly 55) 1e-18"
           * E.g. "Assert Approx (CToken cZRX Comptroller) (Comptroller Address) 1"
       `,
-      "Approx",
-      [
-        new Arg("given", getNumberV),
-        new Arg("expected", getNumberV),
-        new Arg("tolerance", getNumberV, { default: new NumberV(0.001) })
-      ],
+      'Approx',
+      [new Arg('given', getNumberV), new Arg('expected', getNumberV), new Arg('tolerance', getNumberV, { default: new NumberV(0.001) })],
       (world, { given, expected, tolerance }) => assertApprox(world, given, expected, tolerance)
     ),
 
-    new View<{ given: Value, expected: Value }>(`
+    new View<{ given: Value; expected: Value }>(
+      `
         #### Equal
 
         * "Equal given:<Value> expected:<Value>" - Asserts that given matches expected.
@@ -319,191 +320,168 @@ export function assertionCommands() {
           * E.g. "Assert Equal (CToken cZRX TotalSupply) (Exactly 55)"
           * E.g. "Assert Equal (CToken cZRX Comptroller) (Comptroller Address)"
       `,
-      "Equal",
-      [
-        new Arg("given", getCoreValue),
-        new Arg("expected", getCoreValue)
-      ],
+      'Equal',
+      [new Arg('given', getCoreValue), new Arg('expected', getCoreValue)],
       (world, { given, expected }) => assertEqual(world, given, expected)
     ),
 
-    new View<{ given: Value, expected: Value }>(`
+    new View<{ given: Value; expected: Value }>(
+      `
         #### LessThan
 
         * "given:<Value> LessThan expected:<Value>" - Asserts that given is less than expected.
           * E.g. "Assert (Exactly 0) LessThan (Exactly 1)"
       `,
-      "LessThan",
-      [
-        new Arg("given", getCoreValue),
-        new Arg("expected", getCoreValue)
-      ],
+      'LessThan',
+      [new Arg('given', getCoreValue), new Arg('expected', getCoreValue)],
       (world, { given, expected }) => assertLessThan(world, given, expected),
       { namePos: 1 }
     ),
 
-    new View<{ given: Value, expected: Value }>(`
+    new View<{ given: Value; expected: Value }>(
+      `
         #### GreaterThan
 
         * "given:<Value> GreaterThan expected:<Value>" - Asserts that given is greater than the expected.
           * E.g. "Assert (Exactly 0) GreaterThan (Exactly 1)"
       `,
-      "GreaterThan",
-      [
-        new Arg("given", getCoreValue),
-        new Arg("expected", getCoreValue)
-      ],
+      'GreaterThan',
+      [new Arg('given', getCoreValue), new Arg('expected', getCoreValue)],
       (world, { given, expected }) => assertGreaterThan(world, given, expected),
       { namePos: 1 }
     ),
 
-    new View<{ given: Value }>(`
+    new View<{ given: Value }>(
+      `
         #### True
 
         * "True given:<Value>" - Asserts that given is true.
           * E.g. "Assert True (Comptroller CheckMembership Geoff cETH)"
       `,
-      "True",
-      [
-        new Arg("given", getCoreValue)
-      ],
+      'True',
+      [new Arg('given', getCoreValue)],
       (world, { given }) => assertEqual(world, given, new BoolV(true))
     ),
 
-    new View<{ given: Value }>(`
+    new View<{ given: Value }>(
+      `
         #### False
 
         * "False given:<Value>" - Asserts that given is false.
           * E.g. "Assert False (Comptroller CheckMembership Geoff cETH)"
       `,
-      "False",
-      [
-        new Arg("given", getCoreValue)
-      ],
+      'False',
+      [new Arg('given', getCoreValue)],
       (world, { given }) => assertEqual(world, given, new BoolV(false))
     ),
-    new View<{ event: EventV, message: StringV }>(`
+    new View<{ event: EventV; message: StringV }>(
+      `
         #### ReadRevert
 
         * "ReadRevert event:<Event> message:<String>" - Asserts that reading the given value reverts with given message.
           * E.g. "Assert ReadRevert (Comptroller CheckMembership Geoff cETH) \"revert\""
       `,
-      "ReadRevert",
-      [
-        new Arg("event", getEventV),
-        new Arg("message", getStringV)
-      ],
+      'ReadRevert',
+      [new Arg('event', getEventV), new Arg('message', getStringV)],
       (world, { event, message }) => assertReadError(world, event.val, message.val, true)
     ),
 
-    new View<{ event: EventV, message: StringV }>(`
+    new View<{ event: EventV; message: StringV }>(
+      `
         #### ReadError
 
         * "ReadError event:<Event> message:<String>" - Asserts that reading the given value throws given error
           * E.g. "Assert ReadError (Comptroller Bad Address) \"cannot find comptroller\""
       `,
-      "ReadError",
-      [
-        new Arg("event", getEventV),
-        new Arg("message", getStringV)
-      ],
+      'ReadError',
+      [new Arg('event', getEventV), new Arg('message', getStringV)],
       (world, { event, message }) => assertReadError(world, event.val, message.val, false)
     ),
 
-    new View<{ error: StringV, info: StringV, detail: StringV }>(`
+    new View<{ error: StringV; info: StringV; detail: StringV }>(
+      `
         #### Failure
 
         * "Failure error:<String> info:<String> detail:<Number?>" - Asserts that last transaction had a graceful failure with given error, info and detail.
           * E.g. "Assert Failure UNAUTHORIZED SUPPORT_MARKET_OWNER_CHECK"
           * E.g. "Assert Failure MATH_ERROR MINT_CALCULATE_BALANCE 5"
       `,
-      "Failure",
-      [
-        new Arg("error", getStringV),
-        new Arg("info", getStringV),
-        new Arg("detail", getStringV, { default: new StringV("0") }),
-      ],
+      'Failure',
+      [new Arg('error', getStringV), new Arg('info', getStringV), new Arg('detail', getStringV, { default: new StringV('0') })],
       (world, { error, info, detail }) => assertFailure(world, new Failure(error.val, info.val, detail.val))
     ),
 
-    new View<{ error: StringV, message: StringV }>(`
+    new View<{ error: StringV; message: StringV }>(
+      `
         #### RevertFailure
 
         * "RevertFailure error:<String> message:<String>" - Assert last transaction reverted with a message beginning with an error code
           * E.g. "Assert RevertFailure UNAUTHORIZED \"set reserves failed\""
       `,
-      "RevertFailure",
-      [
-        new Arg("error", getStringV),
-        new Arg("message", getStringV),
-      ],
+      'RevertFailure',
+      [new Arg('error', getStringV), new Arg('message', getStringV)],
       (world, { error, message }) => assertRevertFailure(world, error.val, message.val)
     ),
 
-    new View<{ error: StringV, args: StringV[] }>(`
+    new View<{ error: StringV; args: StringV[] }>(
+      `
         #### RevertCustomError
 
         * "RevertCustomError error:<String> args:<[]Value>" - Assert last transaction reverted with a message beginning with an error code
           * E.g. "Assert RevertFailure UNAUTHORIZED \"set reserves failed\""
       `,
-      "RevertCustomError",
-      [
-        new Arg("error", getStringV),
-        new Arg("args", getCoreValue, {variadic: true, mapped: true, default: []}),
-      ],
+      'RevertCustomError',
+      [new Arg('error', getStringV), new Arg('args', getCoreValue, { variadic: true, mapped: true, default: [] })],
       (world, { error, args }) => assertRevertCustomError(world, error.val, rawValues(args))
     ),
 
-    new View<{ message: StringV }>(`
+    new View<{ message: StringV }>(
+      `
         #### Revert
 
         * "Revert message:<String>" - Asserts that the last transaction reverted.
       `,
-      "Revert",
-      [
-        new Arg("message", getStringV, { default: new StringV("revert") }),
-      ],
+      'Revert',
+      [new Arg('message', getStringV, { default: new StringV('revert') })],
       (world, { message }) => assertRevert(world, message.val)
     ),
 
-    new View<{ message: StringV }>(`
+    new View<{ message: StringV }>(
+      `
         #### Error
 
         * "Error message:<String>" - Asserts that the last transaction had the given error.
       `,
-      "Error",
-      [
-        new Arg("message", getStringV),
-      ],
+      'Error',
+      [new Arg('message', getStringV)],
       (world, { message }) => assertError(world, message.val)
     ),
 
-    new View<{ given: Value }>(`
+    new View<{ given: Value }>(
+      `
         #### Success
 
         * "Success" - Asserts that the last transaction completed successfully (that is, did not revert nor emit graceful failure).
       `,
-      "Success",
+      'Success',
       [],
       (world, { given }) => assertSuccess(world)
     ),
 
-    new View<{ name: StringV, params: MapV }>(`
+    new View<{ name: StringV; params: MapV }>(
+      `
         #### Log
 
         * "Log name:<String> (key:<String> value:<Value>) ..." - Asserts that last transaction emitted log with given name and key-value pairs.
           * E.g. "Assert Log Minted ("account" (User Geoff address)) ("amount" (Exactly 55))"
       `,
-      "Log",
-      [
-        new Arg("name", getStringV),
-        new Arg("params", getMapV, { variadic: true }),
-      ],
+      'Log',
+      [new Arg('name', getStringV), new Arg('params', getMapV, { variadic: true })],
       (world, { name, params }) => assertLog(world, name.val, params)
     )
   ];
 }
 
 export async function processAssertionEvent(world: World, event: Event, from: string | null): Promise<World> {
-  return await processCommandEvent<any>("Assertion", assertionCommands(), world, event, from);
+  return await processCommandEvent<any>('Assertion', assertionCommands(), world, event, from);
 }

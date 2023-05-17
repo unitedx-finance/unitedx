@@ -1,27 +1,27 @@
-import {Event} from './Event';
-import {World} from './World';
-import {mustArray} from './Utils';
-import {NothingV} from './Value';
+import { Event } from './Event';
+import { World } from './World';
+import { mustArray } from './Utils';
+import { NothingV } from './Value';
 
 interface ArgOpts<T> {
-  default?: T | T[]
-  implicit?: boolean
-  variadic?: boolean
-  mapped?: boolean
-  nullable?: boolean
-  rescue?: T
+  default?: T | T[];
+  implicit?: boolean;
+  variadic?: boolean;
+  mapped?: boolean;
+  nullable?: boolean;
+  rescue?: T;
 }
 
 export class Arg<T> {
-  name: string
-  type: any
-  getter: (World, Event?) => Promise<T>
-  defaultValue: T | T[] | undefined
-  implicit: boolean
-  variadic: boolean
-  mapped: boolean
-  nullable: boolean
-  rescue: T | undefined
+  name: string;
+  type: any;
+  getter: (World, Event?) => Promise<T>;
+  defaultValue: T | T[] | undefined;
+  implicit: boolean;
+  variadic: boolean;
+  mapped: boolean;
+  nullable: boolean;
+  rescue: T | undefined;
 
   constructor(name: string, getter: (World, Event?) => Promise<T>, opts = <ArgOpts<T>>{}) {
     this.name = name;
@@ -36,20 +36,20 @@ export class Arg<T> {
 }
 
 interface ExpressionOpts {
-  namePos?: number
-  catchall?: boolean
-  subExpressions?: Expression<any>[]
+  namePos?: number;
+  catchall?: boolean;
+  subExpressions?: Expression<any>[];
 }
 
 export abstract class Expression<Args> {
-  doc: string
-  name: string
-  args: Arg<any>[]
-  namePos: number
-  catchall: boolean
-  subExpressions: Expression<any>[]
+  doc: string;
+  name: string;
+  args: Arg<any>[];
+  namePos: number;
+  catchall: boolean;
+  subExpressions: Expression<any>[];
 
-  constructor(doc: string, name: string, args: Arg<any>[], opts: ExpressionOpts={}) {
+  constructor(doc: string, name: string, args: Arg<any>[], opts: ExpressionOpts = {}) {
     this.doc = Command.cleanDoc(doc);
     this.name = name;
     this.args = args;
@@ -98,20 +98,21 @@ export abstract class Expression<Args> {
   async getArgs(world: World, event: Event): Promise<Args> {
     const [_name, eventArgs] = this.getNameArgs(event);
 
-    let initialAcc = <{currArgs: Args, currEvents: Event}>{currArgs: <Args>{}, currEvents: eventArgs};
+    let initialAcc = <{ currArgs: Args; currEvents: Event }>{ currArgs: <Args>{}, currEvents: eventArgs };
 
-    const {currArgs: args, currEvents: restEvent} = await this.args.reduce(async (acc, arg) => {
-      let {currArgs, currEvents} = await acc;
+    const { currArgs: args, currEvents: restEvent } = await this.args.reduce(async (acc, arg) => {
+      let { currArgs, currEvents } = await acc;
       let val: any;
       let restEventArgs: Event;
 
-      if (arg.nullable && currEvents.length === 0) { // Note this is zero-length string or zero-length array
+      if (arg.nullable && currEvents.length === 0) {
+        // Note this is zero-length string or zero-length array
         val = new NothingV();
         restEventArgs = currEvents;
       } else if (arg.variadic) {
         if (arg.mapped) {
           // If mapped, mapped the function over each event arg
-          val = await Promise.all(currEvents.map((event) => arg.getter(world, event)));
+          val = await Promise.all(currEvents.map(event => arg.getter(world, event)));
         } else {
           val = await arg.getter(world, currEvents);
         }
@@ -133,7 +134,7 @@ export abstract class Expression<Args> {
         } else {
           try {
             if (arg.mapped) {
-              val = await await Promise.all(mustArray<Event>(eventArg).map((el) => arg.getter(world, el)));
+              val = await await Promise.all(mustArray<Event>(eventArg).map(el => arg.getter(world, el)));
             } else {
               val = await arg.getter(world, eventArg);
             }
@@ -177,15 +178,21 @@ export abstract class Expression<Args> {
   }
 
   static cleanDoc(doc: string): string {
-    return doc.replace(/^\s+/mg, '').replace(/"/g, '`');
+    return doc.replace(/^\s+/gm, '').replace(/"/g, '`');
   }
 }
 
 export class Command<Args> extends Expression<Args> {
-  processor: (world: World, from: string, args: Args) => Promise<World>
+  processor: (world: World, from: string, args: Args) => Promise<World>;
   requireFrom: boolean = true;
 
-  constructor(doc: string, name: string, args: Arg<any>[], processor: (world: World, from: string, args: Args) => Promise<World>, opts: ExpressionOpts={}) {
+  constructor(
+    doc: string,
+    name: string,
+    args: Arg<any>[],
+    processor: (world: World, from: string, args: Args) => Promise<World>,
+    opts: ExpressionOpts = {}
+  ) {
     super(doc, name, args, opts);
 
     this.processor = processor;
@@ -200,22 +207,28 @@ export class Command<Args> extends Expression<Args> {
 
       return await this.processor(world, from, args);
     } else {
-      return await this.processor(world, <string><any>null, args);
+      return await this.processor(world, <string>(<any>null), args);
     }
   }
 }
 
 export class View<Args> extends Command<Args> {
-  constructor(doc: string, name: string, args: Arg<any>[], processor: (world: World, args: Args) => Promise<World>, opts: ExpressionOpts={}) {
+  constructor(
+    doc: string,
+    name: string,
+    args: Arg<any>[],
+    processor: (world: World, args: Args) => Promise<World>,
+    opts: ExpressionOpts = {}
+  ) {
     super(doc, name, args, (world, from, args) => processor(world, args), opts);
     this.requireFrom = false;
   }
 }
 
 export class Fetcher<Args, Ret> extends Expression<Args> {
-  fetcher: (world: World, args: Args) => Promise<Ret>
+  fetcher: (world: World, args: Args) => Promise<Ret>;
 
-  constructor(doc: string, name: string, args: Arg<any>[], fetcher: (world: World, args: Args) => Promise<Ret>, opts: ExpressionOpts={}) {
+  constructor(doc: string, name: string, args: Arg<any>[], fetcher: (world: World, args: Args) => Promise<Ret>, opts: ExpressionOpts = {}) {
     super(doc, name, args, opts);
 
     this.fetcher = fetcher;
@@ -227,8 +240,14 @@ export class Fetcher<Args, Ret> extends Expression<Args> {
   }
 }
 
-export async function processCommandEvent<Args>(type: string, commands: Command<Args>[], world: World, event: Event, from: string | null): Promise<World> {
-  let matchingCommand = commands.find((command) => command.matches(event));
+export async function processCommandEvent<Args>(
+  type: string,
+  commands: Command<Args>[],
+  world: World,
+  event: Event,
+  from: string | null
+): Promise<World> {
+  let matchingCommand = commands.find(command => command.matches(event));
 
   if (!matchingCommand) {
     throw new Error(`Found unknown ${type} event type ${event.toString()}`);
@@ -238,7 +257,7 @@ export async function processCommandEvent<Args>(type: string, commands: Command<
 }
 
 export async function getFetcherValue<Args, Ret>(type: string, fetchers: Fetcher<Args, Ret>[], world: World, event: Event): Promise<Ret> {
-  let matchingFetcher = fetchers.find((fetcher) => fetcher.matches(event));
+  let matchingFetcher = fetchers.find(fetcher => fetcher.matches(event));
 
   if (!matchingFetcher) {
     throw new Error(`Found unknown ${type} value type ${JSON.stringify(event)}`);

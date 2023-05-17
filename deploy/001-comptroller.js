@@ -7,7 +7,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     from: deployer,
     log: true,
     deterministicDeployment: false,
-    autoMine: true,
+    autoMine: true
   });
 
   const unitroller = await ethers.getContract("Unitroller");
@@ -16,7 +16,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     from: deployer,
     log: true,
     deterministicDeployment: false,
-    autoMine: true,
+    autoMine: true
   });
 
   const Comptroller = await ethers.getContract("Comptroller");

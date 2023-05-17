@@ -2,24 +2,13 @@ import { Event } from '../Event';
 import { addAction, describeUser, World } from '../World';
 import { Governor } from '../Contract/Governor';
 import { invoke } from '../Invokation';
-import {
-  getAddressV,
-  getEventV,
-  getNumberV,
-  getStringV,
-  getCoreValue
-} from '../CoreValue';
-import {
-  AddressV,
-  EventV,
-  NumberV,
-  StringV
-} from '../Value';
+import { getAddressV, getEventV, getNumberV, getStringV, getCoreValue } from '../CoreValue';
+import { AddressV, EventV, NumberV, StringV } from '../Value';
 import { Arg, Command, processCommandEvent, View } from '../Command';
 
 export function guardianCommands(governor: Governor) {
   return [
-    new Command<{ newPendingAdmin: AddressV, eta: NumberV }>(
+    new Command<{ newPendingAdmin: AddressV; eta: NumberV }>(
       `
         #### QueueSetTimelockPendingAdmin
 
@@ -27,10 +16,7 @@ export function guardianCommands(governor: Governor) {
         * E.g. "Governor GovernorScenario Guardian QueueSetTimelockPendingAdmin Geoff 604900"
     `,
       'QueueSetTimelockPendingAdmin',
-      [
-        new Arg('newPendingAdmin', getAddressV),
-        new Arg('eta', getNumberV)
-      ],
+      [new Arg('newPendingAdmin', getAddressV), new Arg('eta', getNumberV)],
       async (world, from, { newPendingAdmin, eta }) => {
         const invokation = await invoke(world, governor.methods.__queueSetTimelockPendingAdmin(newPendingAdmin.val, eta.encode()), from);
 
@@ -38,11 +24,11 @@ export function guardianCommands(governor: Governor) {
           world,
           `Gov Guardian has queued in the timelock a new pending admin command for ${describeUser(world, newPendingAdmin.val)}`,
           invokation
-        )
+        );
       }
     ),
 
-    new Command<{ newPendingAdmin: AddressV, eta: NumberV }>(
+    new Command<{ newPendingAdmin: AddressV; eta: NumberV }>(
       `
         #### ExecuteSetTimelockPendingAdmin
 
@@ -50,10 +36,7 @@ export function guardianCommands(governor: Governor) {
         * E.g. "Governor GovernorScenario Guardian ExecuteSetTimelockPendingAdmin Geoff 604900"
     `,
       'ExecuteSetTimelockPendingAdmin',
-      [
-        new Arg('newPendingAdmin', getAddressV),
-        new Arg('eta', getNumberV)
-      ],
+      [new Arg('newPendingAdmin', getAddressV), new Arg('eta', getNumberV)],
       async (world, from, { newPendingAdmin, eta }) => {
         const invokation = await invoke(world, governor.methods.__executeSetTimelockPendingAdmin(newPendingAdmin.val, eta.encode()), from);
 
@@ -61,7 +44,7 @@ export function guardianCommands(governor: Governor) {
           world,
           `Gov Guardian has executed via the timelock a new pending admin to ${describeUser(world, newPendingAdmin.val)}`,
           invokation
-        )
+        );
       }
     ),
 
@@ -74,14 +57,10 @@ export function guardianCommands(governor: Governor) {
     `,
       'AcceptAdmin',
       [],
-      async (world, from, { }) => {
+      async (world, from, {}) => {
         const invokation = await invoke(world, governor.methods.__acceptAdmin(), from);
 
-        return addAction(
-          world,
-          `Gov Guardian has accepted admin`,
-          invokation
-        )
+        return addAction(world, `Gov Guardian has accepted admin`, invokation);
       }
     ),
 
@@ -94,14 +73,10 @@ export function guardianCommands(governor: Governor) {
     `,
       'Abdicate',
       [],
-      async (world, from, { }) => {
+      async (world, from, {}) => {
         const invokation = await invoke(world, governor.methods.__abdicate(), from);
 
-        return addAction(
-          world,
-          `Gov Guardian has abdicated`,
-          invokation
-        )
+        return addAction(world, `Gov Guardian has abdicated`, invokation);
       }
     )
   ];

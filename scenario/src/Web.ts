@@ -55,7 +55,7 @@ export async function webWorld(
 ): Promise<World> {
   let printer = new CallbackPrinter(printerCallback);
   let accounts;
-  if (web3.currentProvider && typeof(web3.currentProvider) !== 'string') {
+  if (web3.currentProvider && typeof web3.currentProvider !== 'string') {
     // XXXS
     accounts = [(<any>web3.currentProvider).address];
   }
@@ -64,9 +64,9 @@ export async function webWorld(
   const network: string = networkFromId(networkId);
 
   // XXXS
-  const saddle = <Saddle><unknown>{
+  const saddle = <Saddle>(<unknown>{
     web3: web3
-  };
+  });
 
   let world = await initWorld(throwExpect, printer, web3, saddle, network, accounts, null, null);
 

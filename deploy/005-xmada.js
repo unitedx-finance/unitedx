@@ -25,18 +25,18 @@ module.exports = async function({ getChainId, getNamedAccounts, deployments }) {
       "UnitedX MADA",
       "xMADA",
       18,
-      deployer,
+      deployer
     ],
     log: true,
     deterministicDeployment: false,
-    contract: "CEther",
+    contract: "CEther"
   });
   await deployment.receipt;
 
   const xMada = await ethers.getContract("XMada");
   console.log("Supporting xMada market...");
   await comptroller._supportMarket(xMada.address, {
-    gasLimit: 2000000,
+    gasLimit: 2000000
   });
 
   const priceOracle = await ethers.getContract("SimplePriceOracle");

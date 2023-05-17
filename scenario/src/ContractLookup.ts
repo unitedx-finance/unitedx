@@ -11,7 +11,7 @@ import { Comptroller } from './Contract/Comptroller';
 import { ComptrollerImpl } from './Contract/ComptrollerImpl';
 import { CToken } from './Contract/CToken';
 import { Governor } from './Contract/Governor';
-import { GovernorBravo } from './Contract/GovernorBravo'
+import { GovernorBravo } from './Contract/GovernorBravo';
 import { Erc20 } from './Contract/Erc20';
 import { InterestRateModel } from './Contract/InterestRateModel';
 import { PriceOracle } from './Contract/PriceOracle';
@@ -45,9 +45,9 @@ function getContractDataString(world: World, indices: string[][]): string {
 
   if (!value || typeof value !== 'string') {
     throw new Error(
-      `Failed to find string value by index (got ${value}): ${JSON.stringify(
-        indices
-      )}, index contains: ${JSON.stringify(world.contractData.toJSON())}`
+      `Failed to find string value by index (got ${value}): ${JSON.stringify(indices)}, index contains: ${JSON.stringify(
+        world.contractData.toJSON()
+      )}`
     );
   }
 
@@ -65,9 +65,7 @@ export function getWorldContractByAddress<T>(world: World, address: string): T {
 
   if (!contract) {
     throw new Error(
-      `Failed to find world contract by address: ${address}, index contains: ${JSON.stringify(
-        Object.keys(world.contractIndex)
-      )}`
+      `Failed to find world contract by address: ${address}, index contains: ${JSON.stringify(Object.keys(world.contractIndex))}`
     );
   }
 
@@ -111,7 +109,7 @@ export function getGovernorAddress(world: World, governorArg: string): string {
 }
 
 export function getGovernorBravo(world: World, governoBravoArg: string): Promise<GovernorBravo> {
-  return getWorldContract(world, [['Contracts', 'GovernorBravo']])
+  return getWorldContract(world, [['Contracts', 'GovernorBravo']]);
 }
 
 export async function getPriceOracleProxy(world: World): Promise<PriceOracle> {
@@ -126,37 +124,25 @@ export async function getPriceOracle(world: World): Promise<PriceOracle> {
   return getWorldContract(world, [['Contracts', 'PriceOracle']]);
 }
 
-export async function getComp(
-  world: World,
-  compArg: Event
-): Promise<Comp> {
+export async function getComp(world: World, compArg: Event): Promise<Comp> {
   return getWorldContract(world, [['COMP', 'address']]);
 }
 
-export async function getCompData(
-  world: World,
-  compArg: string
-): Promise<[Comp, string, Map<string, string>]> {
+export async function getCompData(world: World, compArg: string): Promise<[Comp, string, Map<string, string>]> {
   let contract = await getComp(world, <Event>(<any>compArg));
   let data = getContractData(world, [['Comp', compArg]]);
 
   return [contract, compArg, <Map<string, string>>(<any>data)];
 }
 
-export async function getGovernorData(
-  world: World,
-  governorArg: string
-): Promise<[Governor, string, Map<string, string>]> {
+export async function getGovernorData(world: World, governorArg: string): Promise<[Governor, string, Map<string, string>]> {
   let contract = getWorldContract<Governor>(world, [['Governor', governorArg, 'address']]);
   let data = getContractData(world, [['Governor', governorArg]]);
 
   return [contract, governorArg, <Map<string, string>>(<any>data)];
 }
 
-export async function getInterestRateModel(
-  world: World,
-  interestRateModelArg: Event
-): Promise<InterestRateModel> {
+export async function getInterestRateModel(world: World, interestRateModelArg: Event): Promise<InterestRateModel> {
   return getWorldContract(world, [['InterestRateModel', mustString(interestRateModelArg), 'address']]);
 }
 
@@ -170,20 +156,14 @@ export async function getInterestRateModelData(
   return [contract, interestRateModelArg, <Map<string, string>>(<any>data)];
 }
 
-export async function getErc20Data(
-  world: World,
-  erc20Arg: string
-): Promise<[Erc20, string, Map<string, string>]> {
+export async function getErc20Data(world: World, erc20Arg: string): Promise<[Erc20, string, Map<string, string>]> {
   let contract = getWorldContract<Erc20>(world, [['Tokens', erc20Arg, 'address']]);
   let data = getContractData(world, [['Tokens', erc20Arg]]);
 
   return [contract, erc20Arg, <Map<string, string>>(<any>data)];
 }
 
-export async function getCTokenData(
-  world: World,
-  cTokenArg: string
-): Promise<[CToken, string, Map<string, string>]> {
+export async function getCTokenData(world: World, cTokenArg: string): Promise<[CToken, string, Map<string, string>]> {
   let contract = getWorldContract<CToken>(world, [['cTokens', cTokenArg, 'address']]);
   let data = getContractData(world, [['CTokens', cTokenArg]]);
 
@@ -219,9 +199,7 @@ export function getAddress(world: World, addressArg: string): string {
     return addressArg;
   }
 
-  let alias = Object.entries(world.settings.aliases).find(
-    ([alias, addr]) => alias.toLowerCase() === addressArg.toLowerCase()
-  );
+  let alias = Object.entries(world.settings.aliases).find(([alias, addr]) => alias.toLowerCase() === addressArg.toLowerCase());
   if (alias) {
     return alias[1];
   }

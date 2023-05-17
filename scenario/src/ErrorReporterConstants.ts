@@ -1,16 +1,16 @@
-import * as ethers from 'ethers'
+import * as ethers from 'ethers';
 interface ErrorReporterEnum {
-  Error: string[]
-  FailureInfo: string[]
-  CustomErrors?: string[]
+  Error: string[];
+  FailureInfo: string[];
+  CustomErrors?: string[];
 }
 
 interface ErrorTypes {
-  Error: {[name: string]: number}
-  FailureInfo: {[name: string]: number}
-  ErrorInv: {[code: number]: string}
-  FailureInfoInv: {[code: number]: string}
-  CustomErrors: ethers.utils.Interface
+  Error: { [name: string]: number };
+  FailureInfo: { [name: string]: number };
+  ErrorInv: { [code: number]: string };
+  FailureInfoInv: { [code: number]: string };
+  CustomErrors: ethers.utils.Interface;
 }
 
 const ComptrollerErrorReporter = {
@@ -55,7 +55,7 @@ const ComptrollerErrorReporter = {
     'SET_PRICE_ORACLE_OWNER_CHECK',
     'SUPPORT_MARKET_EXISTS',
     'SUPPORT_MARKET_OWNER_CHECK',
-    'SET_PAUSE_GUARDIAN_OWNER_CHECK',
+    'SET_PAUSE_GUARDIAN_OWNER_CHECK'
   ]
 };
 
@@ -165,64 +165,64 @@ const TokenErrorReporter = {
   ],
 
   CustomErrors: [
-    "error TransferComptrollerRejection(uint256 errorCode)",
-    "error TransferNotAllowed()",
-    "error TransferNotEnough()",
-    "error TransferTooMuch()",
+    'error TransferComptrollerRejection(uint256 errorCode)',
+    'error TransferNotAllowed()',
+    'error TransferNotEnough()',
+    'error TransferTooMuch()',
 
-    "error MintComptrollerRejection(uint256 errorCode)",
-    "error MintFreshnessCheck()",
+    'error MintComptrollerRejection(uint256 errorCode)',
+    'error MintFreshnessCheck()',
 
-    "error RedeemComptrollerRejection(uint256 errorCode)",
-    "error RedeemFreshnessCheck()",
-    "error RedeemTransferOutNotPossible()",
+    'error RedeemComptrollerRejection(uint256 errorCode)',
+    'error RedeemFreshnessCheck()',
+    'error RedeemTransferOutNotPossible()',
 
-    "error BorrowComptrollerRejection(uint256 errorCode)",
-    "error BorrowFreshnessCheck()",
-    "error BorrowCashNotAvailable()",
+    'error BorrowComptrollerRejection(uint256 errorCode)',
+    'error BorrowFreshnessCheck()',
+    'error BorrowCashNotAvailable()',
 
-    "error RepayBorrowComptrollerRejection(uint256 errorCode)",
-    "error RepayBorrowFreshnessCheck()",
+    'error RepayBorrowComptrollerRejection(uint256 errorCode)',
+    'error RepayBorrowFreshnessCheck()',
 
-    "error LiquidateComptrollerRejection(uint256 errorCode)",
-    "error LiquidateFreshnessCheck()",
-    "error LiquidateCollateralFreshnessCheck()",
-    "error LiquidateAccrueBorrowInterestFailed(uint256 errorCode)",
-    "error LiquidateAccrueCollateralInterestFailed(uint256 errorCode)",
-    "error LiquidateLiquidatorIsBorrower()",
-    "error LiquidateCloseAmountIsZero()",
-    "error LiquidateCloseAmountIsUintMax()",
-    "error LiquidateRepayBorrowFreshFailed(uint256 errorCode)",
+    'error LiquidateComptrollerRejection(uint256 errorCode)',
+    'error LiquidateFreshnessCheck()',
+    'error LiquidateCollateralFreshnessCheck()',
+    'error LiquidateAccrueBorrowInterestFailed(uint256 errorCode)',
+    'error LiquidateAccrueCollateralInterestFailed(uint256 errorCode)',
+    'error LiquidateLiquidatorIsBorrower()',
+    'error LiquidateCloseAmountIsZero()',
+    'error LiquidateCloseAmountIsUintMax()',
+    'error LiquidateRepayBorrowFreshFailed(uint256 errorCode)',
 
-    "error LiquidateSeizeComptrollerRejection(uint256 errorCode)",
-    "error LiquidateSeizeLiquidatorIsBorrower()",
+    'error LiquidateSeizeComptrollerRejection(uint256 errorCode)',
+    'error LiquidateSeizeLiquidatorIsBorrower()',
 
-    "error AcceptAdminPendingAdminCheck()",
+    'error AcceptAdminPendingAdminCheck()',
 
-    "error SetComptrollerOwnerCheck()",
-    "error SetPendingAdminOwnerCheck()",
+    'error SetComptrollerOwnerCheck()',
+    'error SetPendingAdminOwnerCheck()',
 
-    "error SetReserveFactorAdminCheck()",
-    "error SetReserveFactorFreshCheck()",
-    "error SetReserveFactorBoundsCheck()",
+    'error SetReserveFactorAdminCheck()',
+    'error SetReserveFactorFreshCheck()',
+    'error SetReserveFactorBoundsCheck()',
 
-    "error AddReservesFactorFreshCheck(uint256 actualAddAmount)",
+    'error AddReservesFactorFreshCheck(uint256 actualAddAmount)',
 
-    "error ReduceReservesAdminCheck()",
-    "error ReduceReservesFreshCheck()",
-    "error ReduceReservesCashNotAvailable()",
-    "error ReduceReservesCashValidation()",
+    'error ReduceReservesAdminCheck()',
+    'error ReduceReservesFreshCheck()',
+    'error ReduceReservesCashNotAvailable()',
+    'error ReduceReservesCashValidation()',
 
-    "error SetInterestRateModelOwnerCheck()",
-    "error SetInterestRateModelFreshCheck();",
+    'error SetInterestRateModelOwnerCheck()',
+    'error SetInterestRateModelFreshCheck();'
   ]
 };
 
 function parseEnum(reporterEnum: ErrorReporterEnum): ErrorTypes {
-  const Error: {[name: string]: number} = {};
-  const ErrorInv: {[code: number]: string} = {};
-  const FailureInfo: {[name: string]: number} = {};
-  const FailureInfoInv: {[code: number]: string} = {};
+  const Error: { [name: string]: number } = {};
+  const ErrorInv: { [code: number]: string } = {};
+  const FailureInfo: { [name: string]: number } = {};
+  const FailureInfoInv: { [code: number]: string } = {};
 
   reporterEnum.Error.forEach((entry, i) => {
     Error[entry] = i;
@@ -234,9 +234,9 @@ function parseEnum(reporterEnum: ErrorReporterEnum): ErrorTypes {
     FailureInfoInv[i] = entry;
   });
 
-  const CustomErrors = new ethers.utils.Interface(reporterEnum.CustomErrors || [])
+  const CustomErrors = new ethers.utils.Interface(reporterEnum.CustomErrors || []);
 
-  return {Error, ErrorInv, FailureInfo, FailureInfoInv, CustomErrors};
+  return { Error, ErrorInv, FailureInfo, FailureInfoInv, CustomErrors };
 }
 
 export const ComptrollerErr = parseEnum(ComptrollerErrorReporter);

@@ -28,12 +28,7 @@ export interface CTokenMethods {
   liquidateBorrow(borrower: string, cTokenCollateral: string): Sendable<number>;
   liquidateBorrow(borrower: string, repayAmount: encodedNumber, cTokenCollateral: string): Sendable<number>;
   seize(liquidator: string, borrower: string, seizeTokens: encodedNumber): Sendable<number>;
-  evilSeize(
-    treasure: string,
-    liquidator: string,
-    borrower: string,
-    seizeTokens: encodedNumber
-  ): Sendable<number>;
+  evilSeize(treasure: string, liquidator: string, borrower: string, seizeTokens: encodedNumber): Sendable<number>;
   _addReserves(amount: encodedNumber): Sendable<number>;
   _reduceReserves(amount: encodedNumber): Sendable<number>;
   _setReserveFactor(reserveFactor: encodedNumber): Sendable<number>;

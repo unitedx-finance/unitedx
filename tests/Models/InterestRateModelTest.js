@@ -2,8 +2,8 @@ const {
   makeInterestRateModel,
   getBorrowRate,
   getSupplyRate
-} = require('../Utils/Compound');
-const { UInt256Max } = require('../Utils/Ethereum');
+} = require("../Utils/Compound");
+const { UInt256Max } = require("../Utils/Ethereum");
 
 function utilizationRate(cash, borrows, reserves) {
   return borrows ? borrows / (cash + borrows - reserves) : 0;
@@ -18,14 +18,28 @@ function whitePaperRateFn(base, slope, kink = 0.9, jump = 5) {
     } else {
       const excessUtil = ur - kink;
       const jumpMultiplier = jump * slope;
-      return ((excessUtil * jump) + (kink * slope) + base) / blocksPerYear;
+      return (excessUtil * jump + kink * slope + base) / blocksPerYear;
     }
-  }
+  };
 }
 
-function supplyRateFn(base, slope, jump, kink, cash, borrows, reserves, reserveFactor = 0.1) {
+function supplyRateFn(
+  base,
+  slope,
+  jump,
+  kink,
+  cash,
+  borrows,
+  reserves,
+  reserveFactor = 0.1
+) {
   const ur = utilizationRate(cash, borrows, reserves);
-  const borrowRate = whitePaperRateFn(base, slope, jump, kink)(cash, borrows, reserves);
+  const borrowRate = whitePaperRateFn(
+    base,
+    slope,
+    jump,
+    kink
+  )(cash, borrows, reserves);
 
   return borrowRate * (1 - reserveFactor) * ur;
 }
@@ -58,29 +72,32 @@ function makeUtilization(util) {
 
 const blocksPerYear = 2102400;
 
-describe('InterestRateModel', () => {
+describe("InterestRateModel", () => {
   let root, accounts;
-  beforeEach(async() => {
+  beforeEach(async () => {
     [root, ...accounts] = saddle.accounts;
   });
 
   const expectedRates = {
-    'baseP025-slopeP20': { base: 0.025, slope: 0.20, model: 'white-paper' },
-    'baseP05-slopeP45': { base: 0.05, slope: 0.45, model: 'white-paper' },
-    'white-paper': { base: 0.1, slope: 0.45, model: 'white-paper' },
-    'jump-rate': { base: 0.1, slope: 0.45, model: 'jump-rate' }
+    "baseP025-slopeP20": { base: 0.025, slope: 0.2, model: "white-paper" },
+    "baseP05-slopeP45": { base: 0.05, slope: 0.45, model: "white-paper" },
+    "white-paper": { base: 0.1, slope: 0.45, model: "white-paper" },
+    "jump-rate": { base: 0.1, slope: 0.45, model: "jump-rate" }
   };
 
   Object.entries(expectedRates).forEach(async ([kind, info]) => {
     let model;
     beforeAll(async () => {
-      model = await makeInterestRateModel({ kind: info.model, baseRate: info.base, multiplier: info.slope });
+      model = await makeInterestRateModel({
+        kind: info.model,
+        baseRate: info.base,
+        multiplier: info.slope
+      });
     });
 
     describe(kind, () => {
-
-      it('isInterestRateModel', async () => {
-        expect(await call(model, 'isInterestRateModel')).toEqual(true);
+      it("isInterestRateModel", async () => {
+        expect(await call(model, "isInterestRateModel")).toEqual(true);
       });
 
       it(`calculates correct borrow value`, async () => {
@@ -98,38 +115,56 @@ describe('InterestRateModel', () => {
         ].map(vs => vs.map(Number));
 
         // XXS Add back for ${cash}, ${borrows}, ${reserves}
-        await Promise.all(rateInputs.map(async ([cash, borrows, reserves = 0]) => {
-          const rateFn = whitePaperRateFn(info.base, info.slope);
-          const expected = rateFn(cash, borrows, reserves);
-          expect(await getBorrowRate(model, cash, borrows, reserves) / 1e18).toBeWithinDelta(expected, 1e7);
-        }));
+        await Promise.all(
+          rateInputs.map(async ([cash, borrows, reserves = 0]) => {
+            const rateFn = whitePaperRateFn(info.base, info.slope);
+            const expected = rateFn(cash, borrows, reserves);
+            expect(
+              (await getBorrowRate(model, cash, borrows, reserves)) / 1e18
+            ).toBeWithinDelta(expected, 1e7);
+          })
+        );
       });
 
-      if (kind == 'jump-rate') {
+      if (kind == "jump-rate") {
         // Only need to do these for the WhitePaper
 
-        it('handles overflowed cash + borrows', async () => {
-          await expect(getBorrowRate(model, UInt256Max(), UInt256Max(), 0)).rejects.toRevert();
+        it("handles overflowed cash + borrows", async () => {
+          await expect(
+            getBorrowRate(model, UInt256Max(), UInt256Max(), 0)
+          ).rejects.toRevert();
         });
 
-        it('handles failing to get exp of borrows / cash + borrows', async () => {
-          await expect(getBorrowRate(model, 0, UInt256Max(), 0)).rejects.toRevert();
+        it("handles failing to get exp of borrows / cash + borrows", async () => {
+          await expect(
+            getBorrowRate(model, 0, UInt256Max(), 0)
+          ).rejects.toRevert();
         });
 
-        it('handles overflow utilization rate times slope', async () => {
-          const badModel = await makeInterestRateModel({ kind, baseRate: 0, multiplier: -1, jump: -1 });
+        it("handles overflow utilization rate times slope", async () => {
+          const badModel = await makeInterestRateModel({
+            kind,
+            baseRate: 0,
+            multiplier: -1,
+            jump: -1
+          });
           await expect(getBorrowRate(badModel, 1, 1, 0)).rejects.toRevert();
         });
 
-        it('handles overflow utilization rate times slope + base', async () => {
-          const badModel = await makeInterestRateModel({ kind, baseRate: -1, multiplier: 1e48, jump: 1e48 });
+        it("handles overflow utilization rate times slope + base", async () => {
+          const badModel = await makeInterestRateModel({
+            kind,
+            baseRate: -1,
+            multiplier: 1e48,
+            jump: 1e48
+          });
           await expect(getBorrowRate(badModel, 0, 1, 0)).rejects.toRevert();
         });
       }
     });
 
-    describe('jump rate tests', () => {
-      describe('chosen points', () => {
+    describe("jump rate tests", () => {
+      describe("chosen points", () => {
         const tests = [
           {
             jump: 100,
@@ -189,25 +224,33 @@ describe('InterestRateModel', () => {
               [100, 2010]
             ]
           }
-        ].forEach(({jump, kink, base, slope, points}) => {
+        ].forEach(({ jump, kink, base, slope, points }) => {
           describe(`for jump=${jump}, kink=${kink}, base=${base}, slope=${slope}`, () => {
             let jumpModel;
 
             beforeAll(async () => {
               jumpModel = await makeInterestRateModel({
-                kind: 'jump-rate',
+                kind: "jump-rate",
                 baseRate: base / 100,
                 multiplier: slope / 100,
                 jump: jump / 100,
-                kink: kink / 100,
+                kink: kink / 100
               });
             });
 
             points.forEach(([util, expected]) => {
               it(`and util=${util}%`, async () => {
-                const {borrows, cash, reserves} = makeUtilization(util * 1e16);
-                const borrowRateResult = await getBorrowRate(jumpModel, cash, borrows, reserves);
-                const actual = Number(borrowRateResult) / 1e16 * blocksPerYear;
+                const { borrows, cash, reserves } = makeUtilization(
+                  util * 1e16
+                );
+                const borrowRateResult = await getBorrowRate(
+                  jumpModel,
+                  cash,
+                  borrows,
+                  reserves
+                );
+                const actual =
+                  (Number(borrowRateResult) / 1e16) * blocksPerYear;
 
                 expect(actual).toBeWithinDelta(expected, 1e-2);
               });

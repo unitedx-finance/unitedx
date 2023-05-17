@@ -1,10 +1,10 @@
-import {Contract} from '../Contract';
-import {Callable} from '../Invokation';
+import { Contract } from '../Contract';
+import { Callable } from '../Invokation';
 
 interface AnchoredViewMethods {
-  getUnderlyingPrice(asset: string): Callable<number>
+  getUnderlyingPrice(asset: string): Callable<number>;
 }
 
 export interface AnchoredView extends Contract {
-  methods: AnchoredViewMethods
+  methods: AnchoredViewMethods;
 }

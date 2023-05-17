@@ -20,11 +20,7 @@ export interface TokenData {
   decimals?: number;
 }
 
-export async function buildComp(
-  world: World,
-  from: string,
-  params: Event
-): Promise<{ world: World; comp: Comp; tokenData: TokenData }> {
+export async function buildComp(world: World, from: string, params: Event): Promise<{ world: World; comp: Comp; tokenData: TokenData }> {
   const fetchers = [
     new Fetcher<{ account: AddressV }, TokenData>(
       `
@@ -34,9 +30,7 @@ export async function buildComp(
         * E.g. "Comp Deploy Scenario Geoff"
     `,
       'Scenario',
-      [
-        new Arg("account", getAddressV),
-      ],
+      [new Arg('account', getAddressV)],
       async (world, { account }) => {
         return {
           invokation: await CompScenarioContract.deploy<CompScenario>(world, from, [account.val]),
@@ -56,9 +50,7 @@ export async function buildComp(
         * E.g. "Comp Deploy Geoff"
     `,
       'Comp',
-      [
-        new Arg("account", getAddressV),
-      ],
+      [new Arg('account', getAddressV)],
       async (world, { account }) => {
         if (world.isLocalNetwork()) {
           return {
@@ -82,7 +74,7 @@ export async function buildComp(
     )
   ];
 
-  let tokenData = await getFetcherValue<any, TokenData>("DeployComp", fetchers, world, params);
+  let tokenData = await getFetcherValue<any, TokenData>('DeployComp', fetchers, world, params);
   let invokation = tokenData.invokation;
   delete tokenData.invokation;
 
@@ -93,16 +85,10 @@ export async function buildComp(
   const comp = invokation.value!;
   tokenData.address = comp._address;
 
-  world = await storeAndSaveContract(
-    world,
-    comp,
-    'Comp',
-    invokation,
-    [
-      { index: ['Comp'], data: tokenData },
-      { index: ['Tokens', tokenData.symbol], data: tokenData }
-    ]
-  );
+  world = await storeAndSaveContract(world, comp, 'Comp', invokation, [
+    { index: ['Comp'], data: tokenData },
+    { index: ['Tokens', tokenData.symbol], data: tokenData }
+  ]);
 
   tokenData.invokation = invokation;
 

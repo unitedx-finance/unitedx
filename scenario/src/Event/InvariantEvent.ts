@@ -1,20 +1,13 @@
-import {Event} from '../Event';
-import {addInvariant, World} from '../World';
-import {
-  EventV,
-  Value
-} from '../Value';
-import {
-  getCoreValue,
-  getEventV,
-} from '../CoreValue';
-import {Invariant} from '../Invariant';
-import {StaticInvariant} from '../Invariant/StaticInvariant';
-import {RemainsInvariant} from '../Invariant/RemainsInvariant';
-import {SuccessInvariant} from '../Invariant/SuccessInvariant';
-import {formatEvent} from '../Formatter';
-import {Arg, View, processCommandEvent} from '../Command';
-
+import { Event } from '../Event';
+import { addInvariant, World } from '../World';
+import { EventV, Value } from '../Value';
+import { getCoreValue, getEventV } from '../CoreValue';
+import { Invariant } from '../Invariant';
+import { StaticInvariant } from '../Invariant/StaticInvariant';
+import { RemainsInvariant } from '../Invariant/RemainsInvariant';
+import { SuccessInvariant } from '../Invariant/SuccessInvariant';
+import { formatEvent } from '../Formatter';
+import { Arg, View, processCommandEvent } from '../Command';
 
 async function staticInvariant(world: World, condition): Promise<World> {
   const currentValue = await getCoreValue(world, condition);
@@ -40,38 +33,36 @@ async function successInvariant(world: World): Promise<World> {
 
 export function invariantCommands() {
   return [
-    new View<{condition: EventV}>(`
+    new View<{ condition: EventV }>(
+      `
         #### Static
 
         * "Static <Condition>" - Ensures that the given condition retains a consistent value
           * E.g ."Invariant Static (CToken cZRX UnderlyingBalance Geoff)"
       `,
-      "Static",
-      [
-        new Arg("condition", getEventV)
-      ],
-      (world, {condition}) => staticInvariant(world, condition.val)
+      'Static',
+      [new Arg('condition', getEventV)],
+      (world, { condition }) => staticInvariant(world, condition.val)
     ),
-    new View<{condition: EventV, value: Value}>(`
+    new View<{ condition: EventV; value: Value }>(
+      `
         #### Remains
 
         * "Invariant Remains <Condition> <Value>" - Ensures that the given condition starts at and remains a given value
           * E.g ."Invariant Remains (CToken cZRX UnderlyingBalance Geoff) (Exactly 0)"
       `,
-      "Remains",
-      [
-        new Arg("condition", getEventV),
-        new Arg("value", getCoreValue)
-      ],
-      (world, {condition, value}) => remainsInvariant(world, condition.val, value)
+      'Remains',
+      [new Arg('condition', getEventV), new Arg('value', getCoreValue)],
+      (world, { condition, value }) => remainsInvariant(world, condition.val, value)
     ),
-    new View<{}>(`
+    new View<{}>(
+      `
         #### Success
 
         * "Invariant Success" - Ensures that each transaction completes successfully
           * E.g ."Invariant Success"
       `,
-      "Success",
+      'Success',
       [],
       (world, {}) => successInvariant(world)
     )
@@ -79,5 +70,5 @@ export function invariantCommands() {
 }
 
 export async function processInvariantEvent(world: World, event: Event, from: string | null): Promise<World> {
-  return await processCommandEvent<any>("Invariant", invariantCommands(), world, event, from);
+  return await processCommandEvent<any>('Invariant', invariantCommands(), world, event, from);
 }

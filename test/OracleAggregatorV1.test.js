@@ -1,4 +1,4 @@
-const { ethers, network } = require("hardhat");
+const { ethers } = require("hardhat");
 const { expect } = require("chai");
 const OracleValueInverterABI = require("./abi/OracleValueInverter.json");
 
@@ -16,13 +16,13 @@ describe("OracleAggregatorV1", function() {
   const readDataCallData = () => {
     const ABI = ["function readData()"];
     let iface = new ethers.utils.Interface(ABI);
-    return iface.functions.readData.encode([]);
+    return iface.encodeFunctionData("readData", []);
   };
 
-  const assetPricesCallData = (asset) => {
+  const assetPricesCallData = asset => {
     const ABI = ["function assetPrices(address asset)"];
     let iface = new ethers.utils.Interface(ABI);
-    return iface.functions.assetPrices.encode([asset]);
+    return iface.encodeFunctionData("assetPrices", [asset]);
   };
 
   beforeEach(async () => {
@@ -60,7 +60,7 @@ describe("OracleAggregatorV1", function() {
     );
   });
 
-  const setAggregators = async (signer) => {
+  const setAggregators = async signer => {
     await oracleAggregatorV1
       .connect(signer || admin)
       .setAggregators(

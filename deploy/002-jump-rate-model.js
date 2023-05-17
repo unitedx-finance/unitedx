@@ -8,7 +8,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     args: [0, "50000000000000000", "1090000000000000000", "800000000000000000"],
     log: true,
     deterministicDeployment: false,
-    contract: "JumpRateModel",
+    contract: "JumpRateModel"
   });
 
   await deploy("NativeJumpRateModel", {
@@ -16,7 +16,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     from: deployer,
     log: true,
     deterministicDeployment: false,
-    args: [0, "40000000000000000", "1080000000000000000", "700000000000000000"],
+    args: [0, "40000000000000000", "1080000000000000000", "700000000000000000"]
   });
 };
 

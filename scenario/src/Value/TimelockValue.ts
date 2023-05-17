@@ -94,7 +94,11 @@ export function timelockFetchers() {
         new Arg('data', getCoreValue, { variadic: true, mapped: true })
       ],
       (world, { target, value, signature, data, eta }) => {
-        const encodedData = encodeParameters(world, signature.val, data.map(a => a.val));
+        const encodedData = encodeParameters(
+          world,
+          signature.val,
+          data.map(a => a.val)
+        );
         const encodedTransaction = world.web3.eth.abi.encodeParameters(
           ['address', 'uint256', 'string', 'bytes', 'uint256'],
           [target.val, value.val, signature.val, encodedData, eta.val]

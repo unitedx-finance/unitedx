@@ -30,18 +30,18 @@ module.exports = async function({ getChainId, getNamedAccounts, deployments }) {
       8,
       deployer,
       xUsdcDelegate.address,
-      "0x",
+      "0x"
     ],
     log: true,
     deterministicDeployment: false,
-    contract: "CErc20Delegator",
+    contract: "CErc20Delegator"
   });
   await deployment.receipt;
 
   const xUsdcDelegator = await ethers.getContract("XUsdcDelegator");
   console.log("Supporting xUSDC market...");
   await comptroller._supportMarket(xUsdcDelegator.address, {
-    gasLimit: 2000000,
+    gasLimit: 2000000
   });
 
   const priceOracle = await ethers.getContract("SimplePriceOracle");
@@ -70,7 +70,7 @@ module.exports.dependencies = [
   "Comptroller",
   "JumpRateModel",
   "PriceOracle",
-  "CErc20Delegate",
+  "CErc20Delegate"
 ];
 
 module.exports.skip = async () => {

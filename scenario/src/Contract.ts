@@ -6,30 +6,30 @@ import { readFile } from './File';
 import { AbiItem } from 'web3-utils';
 
 export interface Raw {
-  data: string
-  topics: string[]
+  data: string;
+  topics: string[];
 }
 
 export interface Event {
-  event: string
-  signature: string | null
-  address: string
-  returnValues: object
-  logIndex: number
-  transactionIndex: number
-  blockHash: string
-  blockNumber: number
-  raw: Raw
+  event: string;
+  signature: string | null;
+  address: string;
+  returnValues: object;
+  logIndex: number;
+  transactionIndex: number;
+  blockHash: string;
+  blockNumber: number;
+  raw: Raw;
 }
 
 export interface Contract {
-  address: string
-  _address: string
-  name: string
-  methods: any
-  _jsonInterface: AbiItem[]
-  constructorAbi?: string
-  getPastEvents: (event: string, options: { filter: object, fromBlock: number, toBlock: number | string }) => Event[]
+  address: string;
+  _address: string;
+  name: string;
+  methods: any;
+  _jsonInterface: AbiItem[];
+  constructorAbi?: string;
+  getPastEvents: (event: string, options: { filter: object; fromBlock: number; toBlock: number | string }) => Event[];
 }
 
 function randomAddress(): string {
@@ -38,7 +38,7 @@ function randomAddress(): string {
 
 class ContractStub {
   name: string;
-  test: boolean
+  test: boolean;
 
   constructor(name: string, test: boolean) {
     this.name = name;
@@ -47,13 +47,13 @@ class ContractStub {
 
   async deploy<T>(world: World, from: string, args: any[]): Promise<Invokation<T>> {
     // XXXS Consider opts
-    // ( world.web3.currentProvider && typeof(world.web3.currentProvider) !== 'string' && world.web3.currentProvider.opts ) || 
+    // ( world.web3.currentProvider && typeof(world.web3.currentProvider) !== 'string' && world.web3.currentProvider.opts ) ||
     const opts = { from: from };
 
     let invokationOpts = world.getInvokationOpts(opts);
 
     const networkContractABI = await world.saddle.abi(this.name);
-    const constructorAbi = networkContractABI.find((x) => x.type === 'constructor');
+    const constructorAbi = networkContractABI.find(x => x.type === 'constructor');
     let inputs;
 
     if (constructorAbi) {
@@ -69,15 +69,15 @@ class ContractStub {
       if (world.dryRun) {
         let addr = randomAddress();
         console.log(`Dry run: Deploying ${this.name} at fake address ${addr}`);
-        contract = new world.web3.eth.Contract(<any>networkContractABI, addr)
+        contract = new world.web3.eth.Contract(<any>networkContractABI, addr);
         receipt = {
           blockNumber: -1,
-          transactionHash: "0x",
+          transactionHash: '0x',
           events: {}
         };
       } else {
         ({ contract, receipt } = await world.saddle.deployFull(this.name, args, invokationOpts, world.web3));
-        contract.constructorAbi = world.web3.eth.abi.encodeParameters(inputs, args);;
+        contract.constructorAbi = world.web3.eth.abi.encodeParameters(inputs, args);
       }
 
       return new Invokation<T>(contract, receipt, null, null);
@@ -90,7 +90,7 @@ class ContractStub {
     const networkContractABI = await world.saddle.abi(this.name);
 
     // XXXS unknown?
-    return <T><unknown>(new world.web3.eth.Contract(<any>networkContractABI, address));
+    return <T>(<unknown>new world.web3.eth.Contract(<any>networkContractABI, address));
   }
 }
 
@@ -127,7 +127,7 @@ export async function decodeCall(world: World, contract: Contract, input: string
 
   let funsMapped = contract._jsonInterface.reduce((acc, fun) => {
     if (fun.type === 'function') {
-      let functionAbi = `${fun.name}(${(fun.inputs || []).map((i) => i.type).join(',')})`;
+      let functionAbi = `${fun.name}(${(fun.inputs || []).map(i => i.type).join(',')})`;
       let sig = world.web3.utils.sha3(functionAbi).slice(2, 10);
 
       return {
@@ -147,18 +147,18 @@ export async function decodeCall(world: World, contract: Contract, input: string
 
   let decoded = world.web3.eth.abi.decodeParameters(abi.inputs, argsEncoded);
 
-  const args = abi.inputs.map((input) => {
+  const args = abi.inputs.map(input => {
     return `${input.name}=${decoded[input.name]}`;
   });
-  world.printer.printLine(`\n${contract.name}.${abi.name}(\n\t${args.join("\n\t")}\n)`);
+  world.printer.printLine(`\n${contract.name}.${abi.name}(\n\t${args.join('\n\t')}\n)`);
 
   return world;
 }
 
 // XXXS Handle
-async function getNetworkContract(world: World, name: string): Promise<{ abi: any[], bin: string }> {
-  let basePath = world.basePath || ""
-  let network = world.network || ""
+async function getNetworkContract(world: World, name: string): Promise<{ abi: any[]; bin: string }> {
+  let basePath = world.basePath || '';
+  let network = world.network || '';
 
   let pizath = (name, ext) => path.join(basePath, '.build', `contracts.json`);
   let abi, bin;
@@ -173,19 +173,19 @@ async function getNetworkContract(world: World, name: string): Promise<{ abi: an
     bin = networkContract.bin;
   }
   if (!bin) {
-    throw new Error(`no bin for contract ${name} ${network}`)
+    throw new Error(`no bin for contract ${name} ${network}`);
   }
   return {
     abi: abi,
     bin: bin
-  }
+  };
 }
 
-export async function getNetworkContracts(world: World): Promise<{ networkContracts: object, version: string }> {
-  let basePath = world.basePath || ""
-  let network = world.network || ""
+export async function getNetworkContracts(world: World): Promise<{ networkContracts: object; version: string }> {
+  let basePath = world.basePath || '';
+  let network = world.network || '';
 
-  let contractsPath = path.join(basePath, '.build', `contracts.json`)
+  let contractsPath = path.join(basePath, '.build', `contracts.json`);
   let fullContracts = await readFile(world, contractsPath, null, JSON.parse);
   let version = fullContracts.version;
   let networkContracts = Object.entries(fullContracts.contracts).reduce((acc, [k, v]) => {
@@ -194,7 +194,7 @@ export async function getNetworkContracts(world: World): Promise<{ networkContra
     return {
       ...acc,
       [contractName]: {
-        ...<object>v, /// XXXS TODO
+        ...(<object>v), /// XXXS TODO
         path: path
       }
     };

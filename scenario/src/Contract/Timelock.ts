@@ -10,27 +10,9 @@ interface TimelockMethods {
   setDelay(delay: encodedNumber): Sendable<void>;
   acceptAdmin(): Sendable<void>;
   setPendingAdmin(admin: string): Sendable<void>;
-  queueTransaction(
-    target: string,
-    value: encodedNumber,
-    signature: string,
-    data: string,
-    eta: encodedNumber
-  ): Sendable<string>;
-  cancelTransaction(
-    target: string,
-    value: encodedNumber,
-    signature: string,
-    data: string,
-    eta: encodedNumber
-  ): Sendable<void>;
-  executeTransaction(
-    target: string,
-    value: encodedNumber,
-    signature: string,
-    data: string,
-    eta: encodedNumber
-  ): Sendable<string>;
+  queueTransaction(target: string, value: encodedNumber, signature: string, data: string, eta: encodedNumber): Sendable<string>;
+  cancelTransaction(target: string, value: encodedNumber, signature: string, data: string, eta: encodedNumber): Sendable<void>;
+  executeTransaction(target: string, value: encodedNumber, signature: string, data: string, eta: encodedNumber): Sendable<string>;
 
   blockTimestamp(): Callable<number>;
   harnessFastForward(seconds: encodedNumber): Sendable<void>;

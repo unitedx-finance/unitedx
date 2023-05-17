@@ -5,11 +5,7 @@ import { encodedNumber } from '../Encoding';
 
 interface CErc20DelegatorMethods extends CTokenMethods {
   implementation(): Callable<string>;
-  _setImplementation(
-    implementation_: string,
-    allowResign: boolean,
-    becomImplementationData: string
-  ): Sendable<void>;
+  _setImplementation(implementation_: string, allowResign: boolean, becomImplementationData: string): Sendable<void>;
 }
 
 interface CErc20DelegatorScenarioMethods extends CErc20DelegatorMethods {

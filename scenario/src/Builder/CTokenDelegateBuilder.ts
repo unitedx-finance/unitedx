@@ -14,7 +14,6 @@ const CDaiDelegateScenarioContract = getTestContract('CDaiDelegateScenario');
 const CErc20DelegateContract = getContract('CErc20Delegate');
 const CErc20DelegateScenarioContract = getTestContract('CErc20DelegateScenario');
 
-
 export interface CTokenDelegateData {
   invokation: Invokation<CErc20Delegate>;
   name: string;
@@ -28,7 +27,7 @@ export async function buildCTokenDelegate(
   params: Event
 ): Promise<{ world: World; cTokenDelegate: CErc20Delegate; delegateData: CTokenDelegateData }> {
   const fetchers = [
-    new Fetcher<{ name: StringV; }, CTokenDelegateData>(
+    new Fetcher<{ name: StringV }, CTokenDelegateData>(
       `
         #### CDaiDelegate
 
@@ -36,13 +35,8 @@ export async function buildCTokenDelegate(
           * E.g. "CTokenDelegate Deploy CDaiDelegate cDAIDelegate"
       `,
       'CDaiDelegate',
-      [
-        new Arg('name', getStringV)
-      ],
-      async (
-        world,
-        { name }
-      ) => {
+      [new Arg('name', getStringV)],
+      async (world, { name }) => {
         return {
           invokation: await CDaiDelegateContract.deploy<CErc20Delegate>(world, from, []),
           name: name.val,
@@ -52,7 +46,7 @@ export async function buildCTokenDelegate(
       }
     ),
 
-    new Fetcher<{ name: StringV; }, CTokenDelegateData>(
+    new Fetcher<{ name: StringV }, CTokenDelegateData>(
       `
         #### CDaiDelegateScenario
 
@@ -60,13 +54,8 @@ export async function buildCTokenDelegate(
           * E.g. "CTokenDelegate Deploy CDaiDelegateScenario cDAIDelegate"
       `,
       'CDaiDelegateScenario',
-      [
-        new Arg('name', getStringV)
-      ],
-      async (
-        world,
-        { name }
-      ) => {
+      [new Arg('name', getStringV)],
+      async (world, { name }) => {
         return {
           invokation: await CDaiDelegateScenarioContract.deploy<CErc20DelegateScenario>(world, from, []),
           name: name.val,
@@ -76,7 +65,7 @@ export async function buildCTokenDelegate(
       }
     ),
 
-    new Fetcher<{ name: StringV; }, CTokenDelegateData>(
+    new Fetcher<{ name: StringV }, CTokenDelegateData>(
       `
         #### CErc20Delegate
 
@@ -84,13 +73,8 @@ export async function buildCTokenDelegate(
           * E.g. "CTokenDelegate Deploy CErc20Delegate cDAIDelegate"
       `,
       'CErc20Delegate',
-      [
-        new Arg('name', getStringV)
-      ],
-      async (
-        world,
-        { name }
-      ) => {
+      [new Arg('name', getStringV)],
+      async (world, { name }) => {
         return {
           invokation: await CErc20DelegateContract.deploy<CErc20Delegate>(world, from, []),
           name: name.val,
@@ -100,7 +84,7 @@ export async function buildCTokenDelegate(
       }
     ),
 
-    new Fetcher<{ name: StringV; }, CTokenDelegateData>(
+    new Fetcher<{ name: StringV }, CTokenDelegateData>(
       `
         #### CErc20DelegateScenario
 
@@ -108,13 +92,8 @@ export async function buildCTokenDelegate(
           * E.g. "CTokenDelegate Deploy CErc20DelegateScenario cDAIDelegate"
       `,
       'CErc20DelegateScenario',
-      [
-        new Arg('name', getStringV),
-      ],
-      async (
-        world,
-        { name }
-      ) => {
+      [new Arg('name', getStringV)],
+      async (world, { name }) => {
         return {
           invokation: await CErc20DelegateScenarioContract.deploy<CErc20DelegateScenario>(world, from, []),
           name: name.val,
@@ -125,7 +104,7 @@ export async function buildCTokenDelegate(
     )
   ];
 
-  let delegateData = await getFetcherValue<any, CTokenDelegateData>("DeployCToken", fetchers, world, params);
+  let delegateData = await getFetcherValue<any, CTokenDelegateData>('DeployCToken', fetchers, world, params);
   let invokation = delegateData.invokation;
   delete delegateData.invokation;
 
@@ -135,22 +114,16 @@ export async function buildCTokenDelegate(
 
   const cTokenDelegate = invokation.value!;
 
-  world = await storeAndSaveContract(
-    world,
-    cTokenDelegate,
-    delegateData.name,
-    invokation,
-    [
-      {
-        index: ['CTokenDelegate', delegateData.name],
-        data: {
-          address: cTokenDelegate._address,
-          contract: delegateData.contract,
-          description: delegateData.description
-        }
+  world = await storeAndSaveContract(world, cTokenDelegate, delegateData.name, invokation, [
+    {
+      index: ['CTokenDelegate', delegateData.name],
+      data: {
+        address: cTokenDelegate._address,
+        contract: delegateData.contract,
+        description: delegateData.description
       }
-    ]
-  );
+    }
+  ]);
 
   return { world, cTokenDelegate, delegateData };
 }

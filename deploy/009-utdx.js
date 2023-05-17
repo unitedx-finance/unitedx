@@ -7,7 +7,7 @@ module.exports = async function({ getNamedAccounts, deployments }) {
     from: deployer,
     args: [deployer],
     log: true,
-    deterministicDeployment: false,
+    deterministicDeployment: false
   });
 };
 
