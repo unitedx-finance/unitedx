@@ -1,10 +1,6 @@
-// const WMADA = new Map();
-// WMADA.set("2001", "");
-// WMADA.set("200101", "");
-
-// const MADA_PRICE_FEED = new Map();
-// MADA_PRICE_FEED.set("2001", "");
-// MADA_PRICE_FEED.set("200101", "");
+const A3O_WRAPPER = new Map();
+A3O_WRAPPER.set("2001", "0x4c07999c36213537B290088A82b7AA8184FfC517");
+A3O_WRAPPER.set("200101", "0x47a7d67e89E5714456b9af39703C1dc62203002A");
 
 module.exports = async function({ getChainId, getNamedAccounts, deployments }) {
   const { deploy } = deployments;
@@ -39,11 +35,15 @@ module.exports = async function({ getChainId, getNamedAccounts, deployments }) {
     gasLimit: 2000000,
   });
 
-  const priceOracle = await ethers.getContract("SimplePriceOracle");
-  console.log("Setting price feed source for xMada ");
-  await priceOracle.setUnderlyingPrice(
-    xMada.address,
-    ethers.utils.parseUnits("0.38", 18)
+  const ABI = ["function readData()"];
+  let iface = new ethers.utils.Interface(ABI);
+
+  const oracleAggregatorV1 = await ethers.getContract("OracleAggregatorV1");
+  console.log(`Setting aggregator for MilkADA ${xMada.address}...`);
+  await oracleAggregatorV1.setAggregators(
+    [xMada.address],
+    [A3O_WRAPPER.get(chainId)],
+    [iface.encodeFunctionData("readData", [])]
   );
 
   const collateralFactor = "0.75";

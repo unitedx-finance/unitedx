@@ -2,10 +2,6 @@ const USDC = new Map();
 USDC.set("2001", "");
 USDC.set("200101", "0x8c214Fa17D0167675C238F4d4142C4eEeC04f54f");
 
-const USDC_PRICE_FEED = new Map();
-USDC_PRICE_FEED.set("2001", "0xa24de01df22b63d23Ebc1882a5E3d4ec0d907bFB");
-USDC_PRICE_FEED.set("200101", "0xF096872672F44d6EBA71458D74fe67F9a77a23B9");
-
 module.exports = async function({ getChainId, getNamedAccounts, deployments }) {
   const { deploy } = deployments;
   const { deployer } = await getNamedAccounts();
@@ -49,6 +45,21 @@ module.exports = async function({ getChainId, getNamedAccounts, deployments }) {
   await priceOracle.setUnderlyingPrice(
     xUsdcDelegator.address,
     ethers.utils.parseUnits("0.99", 18)
+  );
+
+  const ABI = ["function assetPrices(address asset)"];
+  let iface = new ethers.utils.Interface(ABI);
+
+  const oracleAggregatorV1 = await ethers.getContract("OracleAggregatorV1");
+  console.log(`Setting aggregator for USDC ${xUsdcDelegator.address}...`);
+  await oracleAggregatorV1.setAggregators(
+    [xUsdcDelegator.address],
+    [priceOracle.address],
+    [
+      iface.encodeFunctionData("assetPrices", [
+        await xUsdcDelegator.underlying(),
+      ]),
+    ]
   );
 
   const collateralFactor = "0.80";

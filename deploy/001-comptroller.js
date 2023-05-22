@@ -24,7 +24,8 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   console.log("Setting Comptroller as implementation of Unitroller...");
 
   const deployment = await unitroller._setPendingImplementation(
-    Comptroller.address
+    Comptroller.address,
+    { gasLimit: 5000000, gasPrice: 70000000000 }
   );
 
   await deployment.receipt;
@@ -39,13 +40,15 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
 
   const liquidationIncentive = "1.08";
   console.log("Setting liquidation incentive of ", liquidationIncentive);
-  await comptroller._setLiquidationIncentive(
-    ethers.utils.parseEther(liquidationIncentive)
-  );
+  (
+    await comptroller._setLiquidationIncentive(
+      ethers.utils.parseEther(liquidationIncentive)
+    )
+  ).wait();
 
-  const priceOracle = await ethers.getContract("SimplePriceOracle");
-  console.log("Setting price oracle ", priceOracle.address);
-  await comptroller._setPriceOracle(priceOracle.address);
+  const oracleAggregatorV1 = await ethers.getContract("OracleAggregatorV1");
+  console.log("Setting price oracle aggregator", oracleAggregatorV1.address);
+  (await comptroller._setPriceOracle(oracleAggregatorV1.address)).wait();
 };
 
 module.exports.tags = ["Comptroller"];
