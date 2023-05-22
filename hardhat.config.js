@@ -2,7 +2,6 @@ require("dotenv").config();
 require("@nomiclabs/hardhat-waffle");
 require("hardhat-abi-exporter");
 require("hardhat-deploy");
-// require("hardhat-deploy-ethers");
 require("hardhat-spdx-license-identifier");
 require("hardhat-watcher");
 require("hardhat-contract-sizer");
