@@ -14,12 +14,14 @@ module.exports = async function({ getNamedAccounts, deployments }) {
       comp.address,
       deployer,
       delegate.address,
-      40320,
-      20160,
+      600,
+      20,
       ethers.utils.parseEther("50000"),
     ],
     log: true,
     deterministicDeployment: false,
+    gasLimit: 5000000,
+    gasPrice: 60000000000,
   });
 };
 

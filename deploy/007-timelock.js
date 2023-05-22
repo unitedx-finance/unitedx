@@ -9,7 +9,7 @@ module.exports = async function({ getNamedAccounts, deployments }) {
 
   await deploy("Timelock", {
     from: deployer,
-    args: [deployer, 864000],
+    args: [deployer, 120],
     log: true,
     deterministicDeployment: false,
     gasLimit: 5000000,

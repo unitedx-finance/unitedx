@@ -1,6 +1,6 @@
 const A3O_WRAPPER = new Map();
 A3O_WRAPPER.set("2001", "0x4c07999c36213537B290088A82b7AA8184FfC517");
-A3O_WRAPPER.set("200101", "0x47a7d67e89E5714456b9af39703C1dc62203002A");
+A3O_WRAPPER.set("200101", "0x7B0f99d6204291dAeA578301E5f33Ca4e7bC72df");
 
 module.exports = async function({ getNamedAccounts, deployments }) {
   const { deploy } = deployments;

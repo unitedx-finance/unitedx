@@ -19,7 +19,7 @@ describe("OracleAggregatorV1", function() {
     return iface.encodeFunctionData("readData", []);
   };
 
-  const assetPricesCallData = asset => {
+  const assetPricesCallData = (asset) => {
     const ABI = ["function assetPrices(address asset)"];
     let iface = new ethers.utils.Interface(ABI);
     return iface.encodeFunctionData("assetPrices", [asset]);
@@ -60,7 +60,7 @@ describe("OracleAggregatorV1", function() {
     );
   });
 
-  const setAggregators = async signer => {
+  const setAggregators = async (signer) => {
     await oracleAggregatorV1
       .connect(signer || admin)
       .setAggregators(
@@ -130,5 +130,11 @@ describe("OracleAggregatorV1", function() {
     await expect(
       oracleAggregatorV1.connect(admin).acceptAdmin()
     ).to.be.revertedWith("Unauthorized caller");
+
+    console.log(
+      "DONE: ",
+      readDataCallData(),
+      assetPricesCallData("0xEbC85C04124e55a682Ef35D9f1c458Ab1F5273b2")
+    );
   });
 });

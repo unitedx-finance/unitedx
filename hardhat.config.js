@@ -20,7 +20,7 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
-  // defaultNetwork: "hardhat",
+  defaultNetwork: "hardhat",
   namedAccounts: {
     deployer: {
       default: 0,
@@ -36,6 +36,21 @@ module.exports = {
       accounts: [`0x${process.env.PK}`],
       chainId: 200101,
       gas: "auto",
+    },
+    hardhat: {
+      forking: {
+        enabled: true,
+        url: `https://rpc-devnet-cardano-evm.c1.milkomeda.com`,
+        blockNumber: 12787541,
+      },
+      live: false,
+      saveDeployments: true,
+      tags: ["test", "local"],
+    },
+    localhost: {
+      live: false,
+      saveDeployments: true,
+      tags: ["local"],
     },
   },
   solidity: {
