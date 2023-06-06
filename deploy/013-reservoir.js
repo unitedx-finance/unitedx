@@ -4,8 +4,8 @@ module.exports = async function({ getNamedAccounts, deployments }) {
   const { deployer } = await getNamedAccounts();
 
   const comp = await ethers.getContract("Comp");
-  const comptroller = await ethers.getContract("Comptroller");
-  const dripRate = "0.5";
+  const comptroller = await ethers.getContract("Unitroller");
+  const dripRate = "250";
 
   await deploy("Reservoir", {
     from: deployer,

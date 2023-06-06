@@ -116,7 +116,7 @@ contract CompoundLens {
         address underlyingAssetAddress;
         uint underlyingDecimals;
 
-        if (compareStrings(cToken.symbol(), "cETH")) {
+        if (compareStrings(cToken.symbol(), "xMADA")) {
             underlyingAssetAddress = address(0);
             underlyingDecimals = 18;
         } else {
