@@ -13,7 +13,7 @@ import "./Governance/Comp.sol";
  * @title Compound's Comptroller Contract
  * @author Compound
  */
-contract Comptroller is ComptrollerV7Storage, ComptrollerInterface, ComptrollerErrorReporter, ExponentialNoError {
+contract Comptroller is ComptrollerV8Storage, ComptrollerInterface, ComptrollerErrorReporter, ExponentialNoError {
     /// @notice Emitted when an admin supports a market
     event MarketListed(CToken cToken);
 
@@ -67,6 +67,9 @@ contract Comptroller is ComptrollerV7Storage, ComptrollerInterface, ComptrollerE
 
     /// @notice Emitted when COMP is granted by admin
     event CompGranted(address recipient, uint amount);
+
+    /// @notice Emitted when COMP is claimed by user
+    event CompClaimed(address recipient, uint amount);
 
     /// @notice Emitted when COMP accrued for a user has been manually adjusted.
     event CompAccruedAdjusted(address indexed user, uint oldCompAccrued, uint newCompAccrued);
@@ -1377,6 +1380,8 @@ contract Comptroller is ComptrollerV7Storage, ComptrollerInterface, ComptrollerE
         uint compRemaining = comp.balanceOf(address(this));
         if (amount > 0 && amount <= compRemaining) {
             comp.transfer(user, amount);
+            compClaimed += amount;
+            emit CompClaimed(user, amount);
             return 0;
         }
         return amount;
@@ -1466,6 +1471,6 @@ contract Comptroller is ComptrollerV7Storage, ComptrollerInterface, ComptrollerE
      * @return The address of COMP
      */
     function getCompAddress() virtual public view returns (address) {
-        return 0x69bd626e5B6044393FdC32938188BeAD6A985b4e;
+        return 0x9AfFD78287F978d875A29ab1CA0f368847fc2291;
     }
 }
