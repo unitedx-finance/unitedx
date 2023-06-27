@@ -1,6 +1,6 @@
 const USDC = new Map();
 USDC.set("2001", "");
-USDC.set("200101", "0x8c214Fa17D0167675C238F4d4142C4eEeC04f54f");
+USDC.set("200101", "0x9EB438C9c4d5F40c3752EE40636eB4076AbcB999");
 
 module.exports = async function({ getChainId, getNamedAccounts, deployments }) {
   const { deploy } = deployments;
@@ -23,7 +23,7 @@ module.exports = async function({ getChainId, getNamedAccounts, deployments }) {
       ethers.utils.parseUnits("1", 18),
       "UnitedX USD coin",
       "xUSDC",
-      8,
+      6,
       deployer,
       xUsdcDelegate.address,
       "0x",

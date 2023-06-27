@@ -50,12 +50,17 @@ module.exports = async function({ getChainId, getNamedAccounts, deployments }) {
   console.log("Setting collateral factor ", collateralFactor);
   await comptroller._setCollateralFactor(
     xMada.address,
-    ethers.utils.parseEther(collateralFactor)
+    ethers.utils.parseEther(collateralFactor),
+    {
+      gasLimit: 200000,
+    }
   );
 
   const reserveFactor = "0.20";
   console.log("Setting reserve factor ", reserveFactor);
-  await xMada._setReserveFactor(ethers.utils.parseEther(reserveFactor));
+  await xMada._setReserveFactor(ethers.utils.parseEther(reserveFactor), {
+    gasLimit: 200000,
+  });
 };
 
 module.exports.tags = ["xMada"];

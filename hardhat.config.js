@@ -16,6 +16,8 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
     console.log(account.address);
   }
 });
+const DEFAULT_GAS_MUL = 5;
+const GWEI = 1000 * 1000 * 1000;
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
@@ -35,7 +37,8 @@ module.exports = {
       url: process.env.C1_DEVNET_RPC_URL,
       accounts: [`0x${process.env.PK}`],
       chainId: 200101,
-      gas: "auto",
+      gasMultiplier: DEFAULT_GAS_MUL,
+      gasPrice: 80 * GWEI,
     },
     hardhat: {
       forking: {
