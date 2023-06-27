@@ -29,14 +29,19 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   );
 
   await deployment.receipt;
-  await Comptroller._become(unitroller.address);
-  await deployment.receipt;
+
+  console.log("Setting Comptroller to become Unitroller...");
+  const becoming = await Comptroller._become(unitroller.address, {
+    gasLimit: 5000000,
+    gasPrice: 70000000000,
+  });
+  await becoming.receipt;
 
   const comptroller = Comptroller.attach(unitroller.address);
 
   const closeFactor = "0.5";
   console.log("Setting close factor of ", closeFactor);
-  comptroller._setCloseFactor(ethers.utils.parseEther(closeFactor));
+  await comptroller._setCloseFactor(ethers.utils.parseEther(closeFactor));
 
   const liquidationIncentive = "1.08";
   console.log("Setting liquidation incentive of ", liquidationIncentive);
