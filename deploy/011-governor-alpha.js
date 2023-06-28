@@ -6,7 +6,8 @@ module.exports = async function({ getNamedAccounts, deployments }) {
   const timeLock = await ethers.getContract("Timelock");
   const utdx = await ethers.getContract("Comp");
 
-  await deploy("contracts/Governance/GovernorAlpha.sol:GovernorAlpha", {
+  await deploy("GovernorAlpha", {
+    contract: "contracts/Governance/GovernorAlpha.sol:GovernorAlpha",
     from: deployer,
     args: [timeLock.address, utdx.address, deployer],
     log: true,
