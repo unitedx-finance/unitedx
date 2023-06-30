@@ -44,7 +44,7 @@ module.exports = async function({ getChainId, getNamedAccounts, deployments }) {
   console.log("Setting price feed source for xUSDC ");
   await priceOracle.setUnderlyingPrice(
     xUsdcDelegator.address,
-    ethers.utils.parseUnits("0.99", 6)
+    ethers.utils.parseUnits("0.99", 18)
   );
 
   const ABI = ["function assetPrices(address asset)"];
