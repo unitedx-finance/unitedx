@@ -12,6 +12,7 @@ contract OracleAggregatorV1 is PriceOracle {
     struct SourceData {
         address source;
         bytes data;
+        uint baseUnit;
     }
 
     /**
@@ -29,7 +30,7 @@ contract OracleAggregatorV1 is PriceOracle {
     /**
     * @notice Emitted when new source is added
     */
-    event NewAggregator(address indexed cToken, address indexed source, bytes indexed data);
+    event NewAggregator(address indexed cToken, address indexed source, bytes indexed data, uint baseUnit);
 
     /**
     * @notice Emitted when pendingAdmin is changed
@@ -53,15 +54,19 @@ contract OracleAggregatorV1 is PriceOracle {
  * @param _ctokenAddresses The list of addresses of the cToken markets to be added
  * @param _sources The list of sources to read price data from for cTokens `_ctokenAddresses`
  * @param _datas The list of encoded function signatures corresponding to functions in `_sources`
+ * @param _datas The list of base units (amount of the smallest denomination of that asset per whole) for underlying tokens
  */
     function setAggregators(
         CToken[] calldata _ctokenAddresses,
         address[] memory _sources,
-        bytes[] calldata _datas
+        bytes[] calldata _datas,
+        uint[] memory _baseUnits
     ) external {
         require(msg.sender == admin, "Unauthorized caller");
         require(
-            _ctokenAddresses.length == _sources.length && _ctokenAddresses.length == _datas.length,
+            _ctokenAddresses.length == _sources.length 
+            && _ctokenAddresses.length == _datas.length 
+            && _ctokenAddresses.length == _baseUnits.length,
             "mismatched data"
         );
 
@@ -70,10 +75,11 @@ contract OracleAggregatorV1 is PriceOracle {
 
             aggregators[address(_ctokenAddresses[i])] = SourceData({
                 source: _sources[i],
-                data: _datas[i]
+                data: _datas[i],
+                baseUnit: _baseUnits[i]
             });
 
-            emit NewAggregator(address(_ctokenAddresses[i]), _sources[i], _datas[i]);
+            emit NewAggregator(address(_ctokenAddresses[i]), _sources[i], _datas[i], _baseUnits[i]);
 
              unchecked {
                i++;
@@ -93,7 +99,11 @@ contract OracleAggregatorV1 is PriceOracle {
         uint price = _getUnderlyingPrice(sourceData.source, sourceData.data);
         require(price > 0, "Invalid price");
 
-        return price;
+        // Comptroller needs prices in the format: ${raw price} * 1e36 / baseUnit
+        // The baseUnit of an asset is the amount of the smallest denomination of that asset per whole.
+        // For example, the baseUnit of MADA is 1e18.
+        // Since we assume the prices from Oracles have 18 decimals, we must scale them by 1e(36 - 18)/baseUnit
+        return (price * 1e18) / sourceData.baseUnit;
     }
 
        /**
