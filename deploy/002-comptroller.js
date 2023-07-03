@@ -21,39 +21,51 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
 
   const Comptroller = await ethers.getContract("Comptroller");
 
-  console.log("Setting Comptroller as implementation of Unitroller...");
+  if ((await unitroller.comptrollerImplementation()) !== Comptroller.address) {
+    console.log("Setting Comptroller as implementation of Unitroller...");
 
-  const deployment = await unitroller._setPendingImplementation(
-    Comptroller.address,
-    { gasLimit: 5000000, gasPrice: 70000000000 }
-  );
+    const deployment = await unitroller._setPendingImplementation(
+      Comptroller.address,
+      { gasLimit: 5000000, gasPrice: 70000000000 }
+    );
 
-  await deployment.receipt;
+    await deployment.receipt;
 
-  console.log("Setting Comptroller to become Unitroller...");
-  const becoming = await Comptroller._become(unitroller.address, {
-    gasLimit: 5000000,
-    gasPrice: 70000000000,
-  });
-  await becoming.receipt;
+    console.log("Setting Comptroller to become Unitroller...");
+    const becoming = await Comptroller._become(unitroller.address, {
+      gasLimit: 5000000,
+      gasPrice: 70000000000,
+    });
+    await becoming.receipt;
+  }
 
   const comptroller = Comptroller.attach(unitroller.address);
 
   const closeFactor = "0.5";
-  console.log("Setting close factor of ", closeFactor);
-  await comptroller._setCloseFactor(ethers.utils.parseEther(closeFactor));
+  const closeFactorBN = ethers.utils.parseEther(closeFactor);
+  if (!closeFactorBN.eq(await comptroller.closeFactorMantissa())) {
+    console.log("Setting close factor of ", closeFactor);
+    await (await comptroller._setCloseFactor(closeFactorBN)).wait();
+  }
 
   const liquidationIncentive = "1.08";
-  console.log("Setting liquidation incentive of ", liquidationIncentive);
-  (
-    await comptroller._setLiquidationIncentive(
-      ethers.utils.parseEther(liquidationIncentive)
-    )
-  ).wait();
+  const liquidationIncentiveBN = ethers.utils.parseEther(liquidationIncentive);
+  if (
+    !liquidationIncentiveBN.eq(await comptroller.liquidationIncentiveMantissa())
+  ) {
+    console.log("Setting liquidation incentive of ", liquidationIncentive);
+    await (
+      await comptroller._setLiquidationIncentive(liquidationIncentiveBN)
+    ).wait();
+  }
 
   const oracleAggregatorV1 = await ethers.getContract("OracleAggregatorV1");
-  console.log("Setting price oracle aggregator", oracleAggregatorV1.address);
-  (await comptroller._setPriceOracle(oracleAggregatorV1.address)).wait();
+  if ((await comptroller.oracle()) !== oracleAggregatorV1.address) {
+    console.log("Setting price oracle aggregator", oracleAggregatorV1.address);
+    await (
+      await comptroller._setPriceOracle(oracleAggregatorV1.address)
+    ).wait();
+  }
 };
 
 module.exports.tags = ["Comptroller"];

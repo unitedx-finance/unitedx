@@ -1,6 +1,7 @@
 const USDC = new Map();
 USDC.set("2001", "");
 USDC.set("200101", "0x9EB438C9c4d5F40c3752EE40636eB4076AbcB999");
+const USDCDecimals = 6;
 
 module.exports = async function({ getChainId, getNamedAccounts, deployments }) {
   const { deploy } = deployments;
@@ -20,10 +21,10 @@ module.exports = async function({ getChainId, getNamedAccounts, deployments }) {
       USDC.get(chainId),
       comptroller.address,
       interestRateModel.address,
-      ethers.utils.parseUnits("1", 18),
+      ethers.utils.parseUnits("0.02", 18 + USDCDecimals - 8),
       "UnitedX USD coin",
       "xUSDC",
-      6,
+      8,
       deployer,
       xUsdcDelegate.address,
       "0x",
@@ -59,14 +60,18 @@ module.exports = async function({ getChainId, getNamedAccounts, deployments }) {
       iface.encodeFunctionData("assetPrices", [
         await xUsdcDelegator.underlying(),
       ]),
-    ]
+    ],
+    [ethers.utils.parseUnits("1", USDCDecimals)]
   );
 
   const collateralFactor = "0.80";
   console.log("Setting collateral factor ", collateralFactor);
   await comptroller._setCollateralFactor(
     xUsdcDelegator.address,
-    ethers.utils.parseEther(collateralFactor)
+    ethers.utils.parseEther(collateralFactor),
+    {
+      gasLimit: 200000,
+    }
   );
 
   const reserveFactor = "0.15";
