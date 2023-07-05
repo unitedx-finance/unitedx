@@ -7,8 +7,6 @@ module.exports = async function({ getNamedAccounts, deployments }) {
     from: deployer,
     log: true,
     deterministicDeployment: false,
-    gasLimit: 5000000,
-    gasPrice: 60000000000,
   });
 };
 

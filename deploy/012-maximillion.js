@@ -1,3 +1,4 @@
+const { ethers } = require("hardhat");
 module.exports = async function({ getNamedAccounts, deployments }) {
   const { deploy } = deployments;
 

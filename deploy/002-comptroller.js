@@ -1,3 +1,4 @@
+const { ethers } = require("hardhat");
 module.exports = async ({ getNamedAccounts, deployments }) => {
   const { deploy } = deployments;
 
@@ -24,19 +25,12 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   if ((await unitroller.comptrollerImplementation()) !== Comptroller.address) {
     console.log("Setting Comptroller as implementation of Unitroller...");
 
-    const deployment = await unitroller._setPendingImplementation(
-      Comptroller.address,
-      { gasLimit: 5000000, gasPrice: 70000000000 }
-    );
-
-    await deployment.receipt;
+    await (
+      await unitroller._setPendingImplementation(Comptroller.address)
+    ).wait();
 
     console.log("Setting Comptroller to become Unitroller...");
-    const becoming = await Comptroller._become(unitroller.address, {
-      gasLimit: 5000000,
-      gasPrice: 70000000000,
-    });
-    await becoming.receipt;
+    await (await Comptroller._become(unitroller.address)).wait();
   }
 
   const comptroller = Comptroller.attach(unitroller.address);

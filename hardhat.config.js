@@ -38,7 +38,14 @@ module.exports = {
       accounts: [`0x${process.env.PK}`],
       chainId: 200101,
       gasMultiplier: DEFAULT_GAS_MUL,
-      gasPrice: 80 * GWEI,
+      gasPrice: 40 * GWEI,
+    },
+    c1_mainnet: {
+      url: process.env.C1_MAINNET_RPC_URL,
+      accounts: [`0x${process.env.PK}`],
+      chainId: 2001,
+      gasMultiplier: DEFAULT_GAS_MUL,
+      gasPrice: 40 * GWEI,
     },
     hardhat: {
       forking: {
@@ -54,6 +61,11 @@ module.exports = {
       live: false,
       saveDeployments: true,
       tags: ["local"],
+      forking: {
+        enabled: true,
+        url: `https://rpc-devnet-cardano-evm.c1.milkomeda.com`,
+        blockNumber: 14859221,
+      },
     },
   },
   solidity: {
