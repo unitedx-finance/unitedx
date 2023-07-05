@@ -8,6 +8,8 @@ import "./ComptrollerInterface.sol";
 import "./ComptrollerStorage.sol";
 import "./Unitroller.sol";
 import "./Governance/Comp.sol";
+import "./CErc20.sol";
+import "./CEther.sol";
 
 /**
  * @title Compound's Comptroller Contract
@@ -932,7 +934,7 @@ contract Comptroller is ComptrollerV8Storage, ComptrollerInterface, ComptrollerE
       * @param cToken The address of the market (token) to list
       * @return uint 0=success, otherwise a failure. (See enum Error for details)
       */
-    function _supportMarket(CToken cToken) external returns (uint) {
+    function _supportMarket(CToken cToken) external payable returns (uint) {
         if (msg.sender != admin) {
             return fail(Error.UNAUTHORIZED, FailureInfo.SUPPORT_MARKET_OWNER_CHECK);
         }
@@ -951,6 +953,22 @@ contract Comptroller is ComptrollerV8Storage, ComptrollerInterface, ComptrollerE
 
         _addMarketInternal(address(cToken));
         _initializeMarket(address(cToken));
+
+        // Comptroller mints small amount of cToken to prevent empty market exploit
+        if (compareStrings(cToken.symbol(), "xMADA")) {
+            require(msg.value > 0, "need to deposit mada");
+            CEther cEther = CEther(payable(address(cToken)));
+            cEther.mint{value: msg.value}();
+        } else {
+            CErc20 cErc20 = CErc20(address(cToken));
+            uint mintAmount = cErc20.exchangeRateStored() / expScale;
+            EIP20Interface underlyingToken = EIP20Interface(cErc20.underlying());
+            if (mintAmount == 0) {
+                mintAmount = 1;
+            }
+            underlyingToken.approve(address(cToken), mintAmount);
+            cErc20.mint(mintAmount);
+        }
 
         emit MarketListed(cToken);
 
@@ -1464,6 +1482,10 @@ contract Comptroller is ComptrollerV8Storage, ComptrollerInterface, ComptrollerE
 
     function getBlockNumber() virtual public view returns (uint) {
         return block.number;
+    }
+
+    function compareStrings(string memory a, string memory b) internal pure returns (bool) {
+        return (keccak256(abi.encodePacked((a))) == keccak256(abi.encodePacked((b))));
     }
 
     /**
