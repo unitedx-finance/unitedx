@@ -1,5 +1,7 @@
 require("dotenv").config();
 require("@nomiclabs/hardhat-waffle");
+require("@nomicfoundation/hardhat-chai-matchers");
+require("@nomicfoundation/hardhat-toolbox");
 require("hardhat-abi-exporter");
 require("hardhat-deploy");
 require("hardhat-spdx-license-identifier");
@@ -51,7 +53,7 @@ module.exports = {
       forking: {
         enabled: true,
         url: `https://rpc-devnet-cardano-evm.c1.milkomeda.com`,
-        blockNumber: 12787541,
+        blockNumber: 14859999,
       },
       live: false,
       saveDeployments: true,
@@ -105,6 +107,6 @@ module.exports = {
     timeout: 10000,
   },
   paths: {
-    tests: "./tests/hardhat",
+    tests: "./test",
   },
 };
