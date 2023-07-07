@@ -7,18 +7,22 @@ import "../Oracle/PriceOracle.sol";
 import "../EIP20Interface.sol";
 import "../Governance/GovernorAlpha.sol";
 import "../Governance/Comp.sol";
+import "../ExponentialNoError.sol";
 
 interface ComptrollerLensInterface {
+    struct Exp {
+        uint mantissa;
+    }
     function markets(address) external view returns (bool, uint);
     function oracle() external view returns (PriceOracle);
     function getAccountLiquidity(address) external view returns (uint, uint, uint);
     function getAssetsIn(address) external view returns (CToken[] memory);
     function claimComp(address) external;
     function compAccrued(address) external view returns (uint);
-    function compSpeeds(address) external view returns (uint);
-    function compSupplySpeeds(address) external view returns (uint);
-    function compBorrowSpeeds(address) external view returns (uint);
+    function compSupplySpeed() external view returns (uint);
+    function compBorrowSpeed() external view returns (uint);
     function borrowCaps(address) external view returns (uint);
+    function getMarketCompRatio(address) external view returns (Exp memory);
 }
 
 interface GovernorBravoInterface {
@@ -44,7 +48,7 @@ interface GovernorBravoInterface {
     function getReceipt(uint proposalId, address voter) external view returns (Receipt memory);
 }
 
-contract CompoundLens {
+contract CompoundLens is ExponentialNoError {
     struct CTokenMetadata {
         address cToken;
         uint exchangeRateCurrent;
@@ -63,71 +67,63 @@ contract CompoundLens {
         uint compSupplySpeed;
         uint compBorrowSpeed;
         uint borrowCap;
+        uint marketCompRatio;
     }
 
     function getCompSpeeds(ComptrollerLensInterface comptroller, CToken cToken) internal returns (uint, uint) {
-        // Getting comp speeds is gnarly due to not every network having the
-        // split comp speeds from Proposal 62 and other networks don't even
-        // have comp speeds.
-        uint compSupplySpeed = 0;
-        (bool compSupplySpeedSuccess, bytes memory compSupplySpeedReturnData) =
+        uint compSupplySpeedForCToken = 0;
+        uint compBorrowSpeedForCToken = 0;
+        (bool getMarketCompRatioSuccess, bytes memory getMarketCompRatioReturnData) =
             address(comptroller).call(
                 abi.encodePacked(
-                    comptroller.compSupplySpeeds.selector,
+                    comptroller.getMarketCompRatio.selector,
                     abi.encode(address(cToken))
                 )
             );
-        if (compSupplySpeedSuccess) {
-            compSupplySpeed = abi.decode(compSupplySpeedReturnData, (uint));
-        }
+        if (getMarketCompRatioSuccess) {
+            Exp memory getMarketCompRatio = abi.decode(getMarketCompRatioReturnData, (Exp));
 
-        uint compBorrowSpeed = 0;
-        (bool compBorrowSpeedSuccess, bytes memory compBorrowSpeedReturnData) =
+            (bool compSupplySpeedSuccess, bytes memory compSupplySpeedReturnData) =
             address(comptroller).call(
                 abi.encodePacked(
-                    comptroller.compBorrowSpeeds.selector,
-                    abi.encode(address(cToken))
+                    comptroller.compSupplySpeed.selector
                 )
             );
-        if (compBorrowSpeedSuccess) {
-            compBorrowSpeed = abi.decode(compBorrowSpeedReturnData, (uint));
-        }
+            if (compSupplySpeedSuccess) {
+                uint compSupplySpeed = abi.decode(compSupplySpeedReturnData, (uint));
+                compSupplySpeedForCToken = (mul_(Exp({mantissa: compSupplySpeed}), getMarketCompRatio)).mantissa;
+            }
 
-        // If the split comp speeds call doesn't work, try the  oldest non-spit version.
-        if (!compSupplySpeedSuccess || !compBorrowSpeedSuccess) {
-            (bool compSpeedSuccess, bytes memory compSpeedReturnData) =
-            address(comptroller).call(
-                abi.encodePacked(
-                    comptroller.compSpeeds.selector,
-                    abi.encode(address(cToken))
-                )
-            );
-            if (compSpeedSuccess) {
-                compSupplySpeed = compBorrowSpeed = abi.decode(compSpeedReturnData, (uint));
+            (bool compBorrowSpeedSuccess, bytes memory compBorrowSpeedReturnData) =
+                address(comptroller).call(
+                    abi.encodePacked(
+                        comptroller.compBorrowSpeed.selector
+                    )
+                );
+            if (compBorrowSpeedSuccess) {
+                uint compBorrowSpeed = abi.decode(compBorrowSpeedReturnData, (uint));
+                compBorrowSpeedForCToken = (mul_(Exp({mantissa: compBorrowSpeed}), getMarketCompRatio)).mantissa;
             }
         }
-        return (compSupplySpeed, compBorrowSpeed);
+        return (compSupplySpeedForCToken, compBorrowSpeedForCToken);
     }
 
     function cTokenMetadata(CToken cToken) public returns (CTokenMetadata memory) {
-        uint exchangeRateCurrent = cToken.exchangeRateCurrent();
+        CTokenMetadata memory cTokenMetadataReturn;
         ComptrollerLensInterface comptroller = ComptrollerLensInterface(address(cToken.comptroller()));
         (bool isListed, uint collateralFactorMantissa) = comptroller.markets(address(cToken));
-        address underlyingAssetAddress;
-        uint underlyingDecimals;
 
         if (compareStrings(cToken.symbol(), "xMADA")) {
-            underlyingAssetAddress = address(0);
-            underlyingDecimals = 18;
+            cTokenMetadataReturn.underlyingAssetAddress = address(0);
+            cTokenMetadataReturn.underlyingDecimals = 18;
         } else {
             CErc20 cErc20 = CErc20(address(cToken));
-            underlyingAssetAddress = cErc20.underlying();
-            underlyingDecimals = EIP20Interface(cErc20.underlying()).decimals();
+            cTokenMetadataReturn.underlyingAssetAddress = cErc20.underlying();
+            cTokenMetadataReturn.underlyingDecimals = EIP20Interface(cErc20.underlying()).decimals();
         }
 
         (uint compSupplySpeed, uint compBorrowSpeed) = getCompSpeeds(comptroller, cToken);
 
-        uint borrowCap = 0;
         (bool borrowCapSuccess, bytes memory borrowCapReturnData) =
             address(comptroller).call(
                 abi.encodePacked(
@@ -136,28 +132,36 @@ contract CompoundLens {
                 )
             );
         if (borrowCapSuccess) {
-            borrowCap = abi.decode(borrowCapReturnData, (uint));
+            cTokenMetadataReturn.borrowCap = abi.decode(borrowCapReturnData, (uint));
         }
 
-        return CTokenMetadata({
-            cToken: address(cToken),
-            exchangeRateCurrent: exchangeRateCurrent,
-            supplyRatePerBlock: cToken.supplyRatePerBlock(),
-            borrowRatePerBlock: cToken.borrowRatePerBlock(),
-            reserveFactorMantissa: cToken.reserveFactorMantissa(),
-            totalBorrows: cToken.totalBorrows(),
-            totalReserves: cToken.totalReserves(),
-            totalSupply: cToken.totalSupply(),
-            totalCash: cToken.getCash(),
-            isListed: isListed,
-            collateralFactorMantissa: collateralFactorMantissa,
-            underlyingAssetAddress: underlyingAssetAddress,
-            cTokenDecimals: cToken.decimals(),
-            underlyingDecimals: underlyingDecimals,
-            compSupplySpeed: compSupplySpeed,
-            compBorrowSpeed: compBorrowSpeed,
-            borrowCap: borrowCap
-        });
+        (bool marketCompRatioSuccess, bytes memory marketCompRatioReturnData) =
+            address(comptroller).call(
+                abi.encodePacked(
+                    comptroller.getMarketCompRatio.selector,
+                    abi.encode(address(cToken))
+                )
+            );
+        if (marketCompRatioSuccess) {
+            cTokenMetadataReturn.marketCompRatio = (abi.decode(marketCompRatioReturnData, (Exp))).mantissa;
+        }
+
+        cTokenMetadataReturn.cToken = address(cToken);
+        cTokenMetadataReturn.exchangeRateCurrent = cToken.exchangeRateCurrent();
+        cTokenMetadataReturn.supplyRatePerBlock = cToken.supplyRatePerBlock();
+        cTokenMetadataReturn.borrowRatePerBlock = cToken.borrowRatePerBlock();
+        cTokenMetadataReturn.reserveFactorMantissa = cToken.reserveFactorMantissa();
+        cTokenMetadataReturn.totalBorrows = cToken.totalBorrows();
+        cTokenMetadataReturn.totalReserves = cToken.totalReserves();
+        cTokenMetadataReturn.totalSupply = cToken.totalSupply();
+        cTokenMetadataReturn.totalCash = cToken.getCash();
+        cTokenMetadataReturn.isListed = isListed;
+        cTokenMetadataReturn.collateralFactorMantissa = collateralFactorMantissa;
+        cTokenMetadataReturn.cTokenDecimals = cToken.decimals();
+        cTokenMetadataReturn.compSupplySpeed = compSupplySpeed;
+        cTokenMetadataReturn.compBorrowSpeed = compBorrowSpeed;
+
+        return cTokenMetadataReturn;
     }
 
     function cTokenMetadataAll(CToken[] calldata cTokens) external returns (CTokenMetadata[] memory) {

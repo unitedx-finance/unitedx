@@ -78,6 +78,17 @@ module.exports = async function({ getChainId, getNamedAccounts, deployments }) {
     ).wait();
   }
 
+  const compWeight = "1";
+  const compWeightBN = ethers.utils.parseEther(compWeight);
+  const comptrollerMADACompWeight = (await comptroller.markets(xMada.address))
+    .compWeightMantissa;
+  if (!compWeightBN.eq(comptrollerMADACompWeight)) {
+    console.log("Setting comp weight ", compWeight);
+    await (
+      await comptroller._setCompWeight(xMada.address, compWeightBN)
+    ).wait();
+  }
+
   const reserveFactor = "0.20";
   const reserveFactorBN = ethers.utils.parseEther(reserveFactor);
   const xmadaReserveFactor = await xMada.reserveFactorMantissa();

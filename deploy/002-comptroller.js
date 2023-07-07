@@ -1,8 +1,12 @@
 const { ethers } = require("hardhat");
 module.exports = async ({ getNamedAccounts, deployments }) => {
+  // 1 day in seconds
+  const UTDX_CLAIM_UNLOCK_TIME = 24 * 60 * 60;
   const { deploy } = deployments;
 
   const { deployer } = await getNamedAccounts();
+
+  const utdx = await ethers.getContract("Comp");
 
   await deploy("Unitroller", {
     from: deployer,
@@ -34,6 +38,26 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   }
 
   const comptroller = Comptroller.attach(unitroller.address);
+
+  if (ethers.constants.Zero.eq(await comptroller.compUnlockTimestamp())) {
+    console.log("Setting distribution schedule and UTDX claim unlock time...");
+    await (
+      await comptroller._initializeCompParameters(
+        UTDX_CLAIM_UNLOCK_TIME,
+        utdx.address
+      )
+    ).wait();
+  }
+
+  if (ethers.constants.Zero.eq(await comptroller.compSupplySpeed())) {
+    console.log("Setting comp speeds...");
+    await (
+      await comptroller._setCompSpeeds(
+        "106171178500000000000",
+        "106171178500000000000"
+      )
+    ).wait();
+  }
 
   const closeFactor = "0.5";
   const closeFactorBN = ethers.utils.parseEther(closeFactor);
