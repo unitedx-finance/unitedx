@@ -40,21 +40,11 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   const comptroller = Comptroller.attach(unitroller.address);
 
   if (ethers.constants.Zero.eq(await comptroller.compUnlockTimestamp())) {
-    console.log("Setting distribution schedule and UTDX claim unlock time...");
+    console.log("Initializing UTDX parameters...");
     await (
       await comptroller._initializeCompParameters(
         UTDX_CLAIM_UNLOCK_TIME,
         utdx.address
-      )
-    ).wait();
-  }
-
-  if (ethers.constants.Zero.eq(await comptroller.compSupplySpeed())) {
-    console.log("Setting comp speeds...");
-    await (
-      await comptroller._setCompSpeeds(
-        "106171178500000000000",
-        "106171178500000000000"
       )
     ).wait();
   }
