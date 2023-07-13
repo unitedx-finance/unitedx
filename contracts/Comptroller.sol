@@ -15,7 +15,7 @@ import "./CEther.sol";
  * @title Compound's Comptroller Contract
  * @author Compound
  */
-contract Comptroller is ComptrollerV8Storage, ComptrollerInterface, ComptrollerErrorReporter, ExponentialNoError {
+contract Comptroller is ComptrollerV7Storage, ComptrollerInterface, ComptrollerErrorReporter, ExponentialNoError {
     /// @notice Emitted when an admin supports a market
     event MarketListed(CToken cToken);
 
@@ -30,6 +30,9 @@ contract Comptroller is ComptrollerV8Storage, ComptrollerInterface, ComptrollerE
 
     /// @notice Emitted when a collateral factor is changed by admin
     event NewCollateralFactor(CToken cToken, uint oldCollateralFactorMantissa, uint newCollateralFactorMantissa);
+
+    /// @notice Emitted when a comp weight is changed by admin
+    event NewCompWeight(CToken cToken, uint oldCompWeightMantissa, uint newCompWeightMantissa);
 
     /// @notice Emitted when liquidation incentive is changed by admin
     event NewLiquidationIncentive(uint oldLiquidationIncentiveMantissa, uint newLiquidationIncentiveMantissa);
@@ -47,10 +50,10 @@ contract Comptroller is ComptrollerV8Storage, ComptrollerInterface, ComptrollerE
     event ActionPaused(CToken cToken, string action, bool pauseState);
 
     /// @notice Emitted when a new borrow-side COMP speed is calculated for a market
-    event CompBorrowSpeedUpdated(CToken indexed cToken, uint newSpeed);
+    event CompBorrowSpeedUpdated(uint newSpeed);
 
     /// @notice Emitted when a new supply-side COMP speed is calculated for a market
-    event CompSupplySpeedUpdated(CToken indexed cToken, uint newSpeed);
+    event CompSupplySpeedUpdated(uint newSpeed);
 
     /// @notice Emitted when a new COMP speed is set for a contributor
     event ContributorCompSpeedUpdated(address indexed contributor, uint newSpeed);
@@ -846,6 +849,30 @@ contract Comptroller is ComptrollerV8Storage, ComptrollerInterface, ComptrollerE
     }
 
     /**
+      * @notice Sets the distribution schedule for COMP distribution, the COMP Claim unlock timestamp, and COMP address
+      * @dev Admin function to set distributionSchedule
+      * @param lockTime time in seconds to be added to current time and saved as a comp claim unlock timestamp
+      * @param compContractAddress address of COMP
+      * @return uint 0=success, otherwise a failure
+      */
+    function _initializeCompParameters(uint lockTime, address compContractAddress) external returns (uint) {
+    	require(msg.sender == admin, "only admin can set distribution schedule");
+        if (distributionSchedule.length != 0) { 
+            return fail(Error.REJECTION, FailureInfo.DISTRIBUTION_SCHEDULE_ALREADY_SET);
+        }
+
+        distributionSchedule.push(DistributionSchedule(block.timestamp + 7 days, 106171178500000000000));
+        distributionSchedule.push(DistributionSchedule(block.timestamp + 28 days, 95554060650000000000));
+        distributionSchedule.push(DistributionSchedule(block.timestamp + 84 days, 84936942800000000000));
+        distributionSchedule.push(DistributionSchedule(block.timestamp + 365 days, 76443248550000000000));
+        distributionSchedule.push(DistributionSchedule(block.timestamp + 1095 days, 19907095970000000000));
+        compUnlockTimestamp = block.timestamp + lockTime;
+        compAddress = compContractAddress;
+
+        return uint(Error.NO_ERROR);
+    }
+
+    /**
       * @notice Sets the closeFactor used when liquidating borrows
       * @dev Admin function to set closeFactor
       * @param newCloseFactorMantissa New close factor, scaled by 1e18
@@ -858,6 +885,51 @@ contract Comptroller is ComptrollerV8Storage, ComptrollerInterface, ComptrollerE
         uint oldCloseFactorMantissa = closeFactorMantissa;
         closeFactorMantissa = newCloseFactorMantissa;
         emit NewCloseFactor(oldCloseFactorMantissa, closeFactorMantissa);
+
+        return uint(Error.NO_ERROR);
+    }
+
+    /**
+      * @notice Sets the compWeight for a market
+      * @dev Admin function to set per-market compWeight
+      * @param cToken The market to set the weight on
+      * @param newCompWeightMantissa The new compWeight, scaled by 1e18
+      * @return uint 0=success, otherwise a failure. (See ErrorReporter for details)
+      */
+    function _setCompWeight(CToken cToken, uint newCompWeightMantissa) external returns (uint) {
+        // Check caller is admin
+        if (msg.sender != admin) {
+            return fail(Error.UNAUTHORIZED, FailureInfo.SET_COMP_WEIGHT_OWNER_CHECK);
+        }
+
+        // Verify market is listed
+        Market storage market = markets[address(cToken)];
+        if (!market.isListed) {
+            return fail(Error.MARKET_NOT_LISTED, FailureInfo.SET_COMP_WEIGHT_NO_EXISTS);
+        }
+
+        uint totalCompWeightOfOthers;
+        // Update supply and borrow indexes of all markets
+        for (uint i; i < allMarkets.length; i++) {
+            CToken cTokenIter = allMarkets[i];
+            if (cTokenIter != cToken) {
+                totalCompWeightOfOthers += markets[address(cTokenIter)].compWeightMantissa;
+            }
+            Exp memory borrowIndex = Exp({mantissa: cTokenIter.borrowIndex()});
+            updateCompSupplyIndex(address(cTokenIter));
+            updateCompBorrowIndex(address(cTokenIter), borrowIndex);
+        }
+
+        if (newCompWeightMantissa == 0 && totalCompWeightOfOthers == 0) {
+            return fail(Error.REJECTION, FailureInfo.TOTAL_COMPWEIGHT_ZERO);
+        }
+
+        // Set market's comp weight to new comp weight, remember old value
+        uint oldCompWeightMantissa = market.compWeightMantissa;
+        market.compWeightMantissa = newCompWeightMantissa;
+
+        // Emit event with asset, old collateral factor, and new collateral factor
+        emit NewCompWeight(cToken, oldCompWeightMantissa, newCompWeightMantissa);
 
         return uint(Error.NO_ERROR);
     }
@@ -945,11 +1017,9 @@ contract Comptroller is ComptrollerV8Storage, ComptrollerInterface, ComptrollerE
 
         cToken.isCToken(); // Sanity check to make sure its really a CToken
 
-        // Note that isComped is not in active use anymore
         Market storage newMarket = markets[address(cToken)];
         newMarket.isListed = true;
-        newMarket.isComped = false;
-        newMarket.collateralFactorMantissa = 0;
+        newMarket.collateralFactorMantissa = newMarket.compWeightMantissa = 0;
 
         _addMarketInternal(address(cToken));
         _initializeMarket(address(cToken));
@@ -1110,54 +1180,6 @@ contract Comptroller is ComptrollerV8Storage, ComptrollerInterface, ComptrollerE
         require(unitroller._acceptImplementation() == 0, "change not authorized");
     }
 
-    /// @notice Delete this function after proposal 65 is executed
-    function fixBadAccruals(address[] calldata affectedUsers, uint[] calldata amounts) external {
-        require(msg.sender == admin, "Only admin can call this function"); // Only the timelock can call this function
-        require(!proposal65FixExecuted, "Already executed this one-off function"); // Require that this function is only called once
-        require(affectedUsers.length == amounts.length, "Invalid input");
-
-        // Loop variables
-        address user;
-        uint currentAccrual;
-        uint amountToSubtract;
-        uint newAccrual;
-
-        // Iterate through all affected users
-        for (uint i = 0; i < affectedUsers.length; ++i) {
-            user = affectedUsers[i];
-            currentAccrual = compAccrued[user];
-
-            amountToSubtract = amounts[i];
-
-            // The case where the user has claimed and received an incorrect amount of COMP.
-            // The user has less currently accrued than the amount they incorrectly received.
-            if (amountToSubtract > currentAccrual) {
-                // Amount of COMP the user owes the protocol
-                uint accountReceivable = amountToSubtract - currentAccrual; // Underflow safe since amountToSubtract > currentAccrual
-
-                uint oldReceivable = compReceivable[user];
-                uint newReceivable = add_(oldReceivable, accountReceivable);
-
-                // Accounting: record the COMP debt for the user
-                compReceivable[user] = newReceivable;
-
-                emit CompReceivableUpdated(user, oldReceivable, newReceivable);
-
-                amountToSubtract = currentAccrual;
-            }
-
-            if (amountToSubtract > 0) {
-                // Subtract the bad accrual amount from what they have accrued.
-                // Users will keep whatever they have correctly accrued.
-                compAccrued[user] = newAccrual = sub_(currentAccrual, amountToSubtract);
-
-                emit CompAccruedAdjusted(user, currentAccrual, newAccrual);
-            }
-        }
-
-        proposal65FixExecuted = true; // Makes it so that this function cannot be called again
-    }
-
     /**
      * @notice Checks caller is admin, or this contract is becoming the new implementation
      */
@@ -1168,37 +1190,52 @@ contract Comptroller is ComptrollerV8Storage, ComptrollerInterface, ComptrollerE
     /*** Comp Distribution ***/
 
     /**
-     * @notice Set COMP speed for a single market
-     * @param cToken The market whose COMP speed to update
-     * @param supplySpeed New supply-side COMP speed for market
-     * @param borrowSpeed New borrow-side COMP speed for market
+     * @notice Set COMP speeds for the whole protocol
+     * @param supplySpeed New supply-side COMP speed for the protocol
+     * @param borrowSpeed New borrow-side COMP speed for the protocol
      */
-    function setCompSpeedInternal(CToken cToken, uint supplySpeed, uint borrowSpeed) internal {
-        Market storage market = markets[address(cToken)];
-        require(market.isListed, "comp market is not listed");
-
-        if (compSupplySpeeds[address(cToken)] != supplySpeed) {
+    function setCompSpeedInternal(uint supplySpeed, uint borrowSpeed) internal {
+        if (compSupplySpeed != supplySpeed) {
             // Supply speed updated so let's update supply state to ensure that
             //  1. COMP accrued properly for the old speed, and
             //  2. COMP accrued at the new speed starts after this block.
-            updateCompSupplyIndex(address(cToken));
+            for (uint i; i < allMarkets.length; i++) {
+                CToken cToken = allMarkets[i];
+                updateCompSupplyIndex(address(cToken));
+            }
 
             // Update speed and emit event
-            compSupplySpeeds[address(cToken)] = supplySpeed;
-            emit CompSupplySpeedUpdated(cToken, supplySpeed);
+            compSupplySpeed = supplySpeed;
+            emit CompSupplySpeedUpdated(supplySpeed);
         }
 
-        if (compBorrowSpeeds[address(cToken)] != borrowSpeed) {
+        if (compBorrowSpeed != borrowSpeed) {
             // Borrow speed updated so let's update borrow state to ensure that
             //  1. COMP accrued properly for the old speed, and
             //  2. COMP accrued at the new speed starts after this block.
-            Exp memory borrowIndex = Exp({mantissa: cToken.borrowIndex()});
-            updateCompBorrowIndex(address(cToken), borrowIndex);
+            for (uint i; i < allMarkets.length; i++) {
+                CToken cToken = allMarkets[i];
+                Exp memory borrowIndex = Exp({mantissa: cToken.borrowIndex()});
+                updateCompBorrowIndex(address(cToken), borrowIndex);
+            }
 
             // Update speed and emit event
-            compBorrowSpeeds[address(cToken)] = borrowSpeed;
-            emit CompBorrowSpeedUpdated(cToken, borrowSpeed);
+            compBorrowSpeed = borrowSpeed;
+            emit CompBorrowSpeedUpdated(borrowSpeed);
         }
+    }
+
+    function getTotalCompWeight() public view returns (Exp memory) {
+        uint totalCompWeight;
+        for (uint i; i < allMarkets.length; i++) {
+            CToken cToken = allMarkets[i];
+            totalCompWeight += markets[address(cToken)].compWeightMantissa;
+        }
+        return Exp({mantissa: totalCompWeight == 0 ? 1 : totalCompWeight});
+    }
+
+    function getMarketCompRatio(address cToken) public view returns (Exp memory) {
+        return div_(Exp({mantissa: markets[cToken].compWeightMantissa}), getTotalCompWeight());
     }
 
     /**
@@ -1208,7 +1245,7 @@ contract Comptroller is ComptrollerV8Storage, ComptrollerInterface, ComptrollerE
      */
     function updateCompSupplyIndex(address cToken) internal {
         CompMarketState storage supplyState = compSupplyState[cToken];
-        uint supplySpeed = compSupplySpeeds[cToken];
+        uint supplySpeed = (mul_(Exp({mantissa: compSupplySpeed}), getMarketCompRatio(cToken))).mantissa;
         uint32 blockNumber = safe32(getBlockNumber(), "block number exceeds 32 bits");
         uint deltaBlocks = sub_(uint(blockNumber), uint(supplyState.block));
         if (deltaBlocks > 0 && supplySpeed > 0) {
@@ -1229,7 +1266,7 @@ contract Comptroller is ComptrollerV8Storage, ComptrollerInterface, ComptrollerE
      */
     function updateCompBorrowIndex(address cToken, Exp memory marketBorrowIndex) internal {
         CompMarketState storage borrowState = compBorrowState[cToken];
-        uint borrowSpeed = compBorrowSpeeds[cToken];
+        uint borrowSpeed = (mul_(Exp({mantissa: compBorrowSpeed}), getMarketCompRatio(cToken))).mantissa;
         uint32 blockNumber = safe32(getBlockNumber(), "block number exceeds 32 bits");
         uint deltaBlocks = sub_(uint(blockNumber), uint(borrowState.block));
         if (deltaBlocks > 0 && borrowSpeed > 0) {
@@ -1364,6 +1401,7 @@ contract Comptroller is ComptrollerV8Storage, ComptrollerInterface, ComptrollerE
      * @param suppliers Whether or not to claim COMP earned by supplying
      */
     function claimComp(address[] memory holders, CToken[] memory cTokens, bool borrowers, bool suppliers) public {
+        require(block.timestamp > compUnlockTimestamp, "comp claiming is locked");
         for (uint i = 0; i < cTokens.length; i++) {
             CToken cToken = cTokens[i];
             require(markets[address(cToken)].isListed, "market must be listed");
@@ -1394,7 +1432,7 @@ contract Comptroller is ComptrollerV8Storage, ComptrollerInterface, ComptrollerE
      * @return The amount of COMP which was NOT transferred to the user
      */
     function grantCompInternal(address user, uint amount) internal returns (uint) {
-        Comp comp = Comp(getCompAddress());
+        Comp comp = Comp(compAddress);
         uint compRemaining = comp.balanceOf(address(this));
         if (amount > 0 && amount <= compRemaining) {
             comp.transfer(user, amount);
@@ -1421,20 +1459,21 @@ contract Comptroller is ComptrollerV8Storage, ComptrollerInterface, ComptrollerE
     }
 
     /**
-     * @notice Set COMP borrow and supply speeds for the specified markets.
-     * @param cTokens The markets whose COMP speed to update.
-     * @param supplySpeeds New supply-side COMP speed for the corresponding market.
-     * @param borrowSpeeds New borrow-side COMP speed for the corresponding market.
+     * @notice Set COMP borrow and supply speeds for the protocol.
+     * @param supplySpeed New supply-side COMP speed for the protocol.
+     * @param borrowSpeed New borrow-side COMP speed for the protocol.
      */
-    function _setCompSpeeds(CToken[] memory cTokens, uint[] memory supplySpeeds, uint[] memory borrowSpeeds) public {
+    function _setCompSpeeds(uint supplySpeed, uint borrowSpeed) public {
         require(adminOrInitializing(), "only admin can set comp speed");
-
-        uint numTokens = cTokens.length;
-        require(numTokens == supplySpeeds.length && numTokens == borrowSpeeds.length, "Comptroller::_setCompSpeeds invalid input");
-
-        for (uint i = 0; i < numTokens; ++i) {
-            setCompSpeedInternal(cTokens[i], supplySpeeds[i], borrowSpeeds[i]);
+        require(distributionSchedule.length > 0, "distribution schedule has not been set");
+        for (uint i = 0; i < distributionSchedule.length; i++) {
+            DistributionSchedule memory ds = distributionSchedule[i];
+            if (block.timestamp < ds.timestamp) {
+                require(supplySpeed == ds.compSpeed && borrowSpeed == ds.compSpeed, "comp speed must be set according to the distribution schedule during first 3 years");
+                break;
+            }
         }
+        setCompSpeedInternal(supplySpeed, borrowSpeed);        
     }
 
     /**
@@ -1486,13 +1525,5 @@ contract Comptroller is ComptrollerV8Storage, ComptrollerInterface, ComptrollerE
 
     function compareStrings(string memory a, string memory b) internal pure returns (bool) {
         return (keccak256(abi.encodePacked((a))) == keccak256(abi.encodePacked((b))));
-    }
-
-    /**
-     * @notice Return the address of the COMP token
-     * @return The address of COMP
-     */
-    function getCompAddress() virtual public view returns (address) {
-        return 0x9AfFD78287F978d875A29ab1CA0f368847fc2291;
     }
 }

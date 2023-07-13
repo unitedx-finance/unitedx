@@ -6,6 +6,8 @@ const A3O_WRAPPER = "0xDf60876c566201086846A1ff19d8853F95178c2F";
 const XUSDC = "0x20824b2A5064802ee5E2F8AcF9947c4A3F2B60F1";
 const USDC = "0x8c214Fa17D0167675C238F4d4142C4eEeC04f54f";
 const XMADA = "0x173410946E08b68E638b43A715A0bE342babDd0f";
+const USDCDecimals = 6;
+const MADADecimals = 18;
 
 const USDC_PRICE = ethers.utils.parseUnits("1", 18);
 
@@ -66,7 +68,11 @@ describe("OracleAggregatorV1", function() {
       .setAggregators(
         [xUSDC.address, xMADA.address],
         [simpleOracle.address, a3oWrapper.address],
-        [assetPricesCallData(USDC), readDataCallData()]
+        [assetPricesCallData(USDC), readDataCallData()],
+        [
+          ethers.utils.parseUnits("1", USDCDecimals),
+          ethers.utils.parseUnits("1", MADADecimals),
+        ]
       );
   };
 
@@ -99,13 +105,15 @@ describe("OracleAggregatorV1", function() {
   it("Can read underlying prices", async () => {
     await setAggregators();
 
-    expect(
-      Number(await oracleAggregatorV1.getUnderlyingPrice(xUSDC.address))
-    ).to.equal(Number(USDC_PRICE));
+    expect(await oracleAggregatorV1.getUnderlyingPrice(xUSDC.address)).to.equal(
+      USDC_PRICE.mul(ethers.utils.parseUnits("1", 18 - USDCDecimals))
+    );
 
-    expect(
-      Number(await oracleAggregatorV1.getUnderlyingPrice(xMADA.address))
-    ).to.equal(Number(await a3oWrapper.readData()));
+    expect(await oracleAggregatorV1.getUnderlyingPrice(xMADA.address)).to.equal(
+      (await a3oWrapper.readData()).mul(
+        ethers.utils.parseUnits("1", 18 - MADADecimals)
+      )
+    );
   });
 
   it("Admin can set pending admin, and pending admin can accept admin", async () => {
@@ -130,11 +138,5 @@ describe("OracleAggregatorV1", function() {
     await expect(
       oracleAggregatorV1.connect(admin).acceptAdmin()
     ).to.be.revertedWith("Unauthorized caller");
-
-    console.log(
-      "DONE: ",
-      readDataCallData(),
-      assetPricesCallData("0xEbC85C04124e55a682Ef35D9f1c458Ab1F5273b2")
-    );
   });
 });

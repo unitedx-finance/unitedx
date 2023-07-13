@@ -1,0 +1,192 @@
+{
+  "address": "0x44B636D5BcE2abbff3F1C4e4201a5ECE31038bA3",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "contract EIP20Interface",
+          "name": "token_",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "target_",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "lockTime_",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [],
+      "name": "lockTime",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "target",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "token",
+      "outputs": [
+        {
+          "internalType": "contract EIP20Interface",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "transfer",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0x9bd8db30696de91758ac4aab51c347420b09eac2c99101b774bed7ed8e787719",
+  "receipt": {
+    "to": null,
+    "from": "0x1946a1DD383FE3c3cd9ae3066C638EF6ed7E35e5",
+    "contractAddress": "0x44B636D5BcE2abbff3F1C4e4201a5ECE31038bA3",
+    "transactionIndex": 0,
+    "gasUsed": "262187",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0x98f39e2647f727702b2e3ad0543c09e899457d3ed98c1ba14a04edb0bb347088",
+    "transactionHash": "0x9bd8db30696de91758ac4aab51c347420b09eac2c99101b774bed7ed8e787719",
+    "logs": [],
+    "blockNumber": 15245965,
+    "cumulativeGasUsed": "262187",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [
+    "0xbC052E05c4e5d58935AF0e270747C1F12edCb52f",
+    "0xFc5F323b857465Fae915B1BD23E7dBE0B38E7333",
+    94608000
+  ],
+  "numDeployments": 1,
+  "solcInputHash": "7a0f2ef9dbc80f0d3c1529104e79243f",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.10+commit.fc410830\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"contract EIP20Interface\",\"name\":\"token_\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"target_\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"lockTime_\",\"type\":\"uint256\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"inputs\":[],\"name\":\"lockTime\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"target\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"token\",\"outputs\":[{\"internalType\":\"contract EIP20Interface\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"transfer\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"author\":\"0xMiniPanda\",\"kind\":\"dev\",\"methods\":{\"constructor\":{\"params\":{\"lockTime_\":\"Lock time in seconds, will be added to current block timestamp\",\"target_\":\"The recipient of dripped tokens\",\"token_\":\"The token to drip\"}},\"transfer()\":{\"details\":\"Note: this will only drip up to the amount of tokens available.\",\"returns\":{\"_0\":\"The amount of tokens transferred in this call\"}}},\"title\":\"CompLock Contract\",\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"constructor\":{\"notice\":\"Constructs a CompLock\"},\"lockTime()\":{\"notice\":\"Timestamp after which the transfer can be initiated\"},\"target()\":{\"notice\":\"Target to receive transferred tokens (immutable)\"},\"token()\":{\"notice\":\"Reference to token to transfer (immutable)\"},\"transfer()\":{\"notice\":\"Drips the maximum amount of tokens to match the drip rate since inception\"}},\"notice\":\"Transfers a token to a different address after certain time has passed.\",\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/CompLock.sol\":\"CompLock\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"contracts/CompLock.sol\":{\"content\":\"// SPDX-License-Identifier: BSD-3-Clause\\npragma solidity ^0.8.10;\\n\\nimport \\\"./EIP20Interface.sol\\\";\\n\\n/**\\n * @title CompLock Contract\\n * @notice Transfers a token to a different address after certain time has passed.\\n * @author 0xMiniPanda\\n */\\ncontract CompLock {\\n  /// @notice Reference to token to transfer (immutable)\\n  EIP20Interface public token;\\n\\n  /// @notice Target to receive transferred tokens (immutable)\\n  address public target;\\n\\n  /// @notice Timestamp after which the transfer can be initiated\\n  uint public lockTime;\\n\\n  /**\\n    * @notice Constructs a CompLock\\n    * @param token_ The token to drip\\n    * @param target_ The recipient of dripped tokens\\n    * @param lockTime_ Lock time in seconds, will be added to current block timestamp\\n    */\\n  constructor(EIP20Interface token_, address target_, uint lockTime_) {\\n    token = token_;\\n    target = target_;\\n    lockTime = block.timestamp + lockTime_;\\n  }\\n\\n  /**\\n    * @notice Drips the maximum amount of tokens to match the drip rate since inception\\n    * @dev Note: this will only drip up to the amount of tokens available.\\n    * @return The amount of tokens transferred in this call\\n    */\\n  function transfer() public returns (uint) {\\n    // First, read storage into memory\\n    EIP20Interface token_ = token;\\n    uint reservoirBalance_ = token_.balanceOf(address(this));\\n    address target_ = target;\\n    \\n    require(block.timestamp >= lockTime, \\\"unlock time not reached yet\\\");\\n\\n    // Transfer the tokens\\n    token_.transfer(target_, reservoirBalance_);\\n    return reservoirBalance_;\\n  }\\n}\",\"keccak256\":\"0xfe354b1d39141b20eb4f7ffd27ace18550602f216ec11f9d4b3463633fa81a48\",\"license\":\"BSD-3-Clause\"},\"contracts/EIP20Interface.sol\":{\"content\":\"// SPDX-License-Identifier: BSD-3-Clause\\npragma solidity ^0.8.10;\\n\\n/**\\n * @title ERC 20 Token Standard Interface\\n *  https://eips.ethereum.org/EIPS/eip-20\\n */\\ninterface EIP20Interface {\\n    function name() external view returns (string memory);\\n    function symbol() external view returns (string memory);\\n    function decimals() external view returns (uint8);\\n\\n    /**\\n      * @notice Get the total number of tokens in circulation\\n      * @return The supply of tokens\\n      */\\n    function totalSupply() external view returns (uint256);\\n\\n    /**\\n     * @notice Gets the balance of the specified address\\n     * @param owner The address from which the balance will be retrieved\\n     * @return balance The balance\\n     */\\n    function balanceOf(address owner) external view returns (uint256 balance);\\n\\n    /**\\n      * @notice Transfer `amount` tokens from `msg.sender` to `dst`\\n      * @param dst The address of the destination account\\n      * @param amount The number of tokens to transfer\\n      * @return success Whether or not the transfer succeeded\\n      */\\n    function transfer(address dst, uint256 amount) external returns (bool success);\\n\\n    /**\\n      * @notice Transfer `amount` tokens from `src` to `dst`\\n      * @param src The address of the source account\\n      * @param dst The address of the destination account\\n      * @param amount The number of tokens to transfer\\n      * @return success Whether or not the transfer succeeded\\n      */\\n    function transferFrom(address src, address dst, uint256 amount) external returns (bool success);\\n\\n    /**\\n      * @notice Approve `spender` to transfer up to `amount` from `src`\\n      * @dev This will overwrite the approval amount for `spender`\\n      *  and is subject to issues noted [here](https://eips.ethereum.org/EIPS/eip-20#approve)\\n      * @param spender The address of the account which may transfer tokens\\n      * @param amount The number of tokens that are approved (-1 means infinite)\\n      * @return success Whether or not the approval succeeded\\n      */\\n    function approve(address spender, uint256 amount) external returns (bool success);\\n\\n    /**\\n      * @notice Get the current allowance from `owner` for `spender`\\n      * @param owner The address of the account which owns the tokens to be spent\\n      * @param spender The address of the account which may transfer tokens\\n      * @return remaining The number of tokens allowed to be spent (-1 means infinite)\\n      */\\n    function allowance(address owner, address spender) external view returns (uint256 remaining);\\n\\n    event Transfer(address indexed from, address indexed to, uint256 amount);\\n    event Approval(address indexed owner, address indexed spender, uint256 amount);\\n}\\n\",\"keccak256\":\"0xf44fc7783d4a0060119f0096a122c3f305c7a03da75aa21408393d8d7a2e649b\",\"license\":\"BSD-3-Clause\"}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b5060405161038338038061038383398101604081905261002f9161008d565b600080546001600160a01b038086166001600160a01b031992831617909255600180549285169290911691909117905561006981426100d0565b600255506100f6915050565b6001600160a01b038116811461008a57600080fd5b50565b6000806000606084860312156100a257600080fd5b83516100ad81610075565b60208501519093506100be81610075565b80925050604084015190509250925092565b600082198211156100f157634e487b7160e01b600052601160045260246000fd5b500190565b61027e806101056000396000f3fe608060405234801561001057600080fd5b506004361061004c5760003560e01c80630d668087146100515780638a4068dd1461006d578063d4b8399214610075578063fc0c546a146100a0575b600080fd5b61005a60025481565b6040519081526020015b60405180910390f35b61005a6100b3565b600154610088906001600160a01b031681565b6040516001600160a01b039091168152602001610064565b600054610088906001600160a01b031681565b600080546040516370a0823160e01b81523060048201526001600160a01b0390911690829082906370a0823190602401602060405180830381865afa158015610100573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906101249190610206565b6001546002549192506001600160a01b03169042101561018a5760405162461bcd60e51b815260206004820152601b60248201527f756e6c6f636b2074696d65206e6f742072656163686564207965740000000000604482015260640160405180910390fd5b60405163a9059cbb60e01b81526001600160a01b0382811660048301526024820184905284169063a9059cbb906044016020604051808303816000875af11580156101d9573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906101fd919061021f565b50909392505050565b60006020828403121561021857600080fd5b5051919050565b60006020828403121561023157600080fd5b8151801515811461024157600080fd5b939250505056fea26469706673582212205c65c3ff8cd5c84a87222bb6e0eb59dfb4045d304d81c68b553ceebd3de2e87d64736f6c634300080a0033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b506004361061004c5760003560e01c80630d668087146100515780638a4068dd1461006d578063d4b8399214610075578063fc0c546a146100a0575b600080fd5b61005a60025481565b6040519081526020015b60405180910390f35b61005a6100b3565b600154610088906001600160a01b031681565b6040516001600160a01b039091168152602001610064565b600054610088906001600160a01b031681565b600080546040516370a0823160e01b81523060048201526001600160a01b0390911690829082906370a0823190602401602060405180830381865afa158015610100573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906101249190610206565b6001546002549192506001600160a01b03169042101561018a5760405162461bcd60e51b815260206004820152601b60248201527f756e6c6f636b2074696d65206e6f742072656163686564207965740000000000604482015260640160405180910390fd5b60405163a9059cbb60e01b81526001600160a01b0382811660048301526024820184905284169063a9059cbb906044016020604051808303816000875af11580156101d9573d6000803e3d6000fd5b505050506040513d601f19601f820116820180604052508101906101fd919061021f565b50909392505050565b60006020828403121561021857600080fd5b5051919050565b60006020828403121561023157600080fd5b8151801515811461024157600080fd5b939250505056fea26469706673582212205c65c3ff8cd5c84a87222bb6e0eb59dfb4045d304d81c68b553ceebd3de2e87d64736f6c634300080a0033",
+  "devdoc": {
+    "author": "0xMiniPanda",
+    "kind": "dev",
+    "methods": {
+      "constructor": {
+        "params": {
+          "lockTime_": "Lock time in seconds, will be added to current block timestamp",
+          "target_": "The recipient of dripped tokens",
+          "token_": "The token to drip"
+        }
+      },
+      "transfer()": {
+        "details": "Note: this will only drip up to the amount of tokens available.",
+        "returns": {
+          "_0": "The amount of tokens transferred in this call"
+        }
+      }
+    },
+    "title": "CompLock Contract",
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {
+      "constructor": {
+        "notice": "Constructs a CompLock"
+      },
+      "lockTime()": {
+        "notice": "Timestamp after which the transfer can be initiated"
+      },
+      "target()": {
+        "notice": "Target to receive transferred tokens (immutable)"
+      },
+      "token()": {
+        "notice": "Reference to token to transfer (immutable)"
+      },
+      "transfer()": {
+        "notice": "Drips the maximum amount of tokens to match the drip rate since inception"
+      }
+    },
+    "notice": "Transfers a token to a different address after certain time has passed.",
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 7,
+        "contract": "contracts/CompLock.sol:CompLock",
+        "label": "token",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_contract(EIP20Interface)175"
+      },
+      {
+        "astId": 10,
+        "contract": "contracts/CompLock.sol:CompLock",
+        "label": "target",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_address"
+      },
+      {
+        "astId": 13,
+        "contract": "contracts/CompLock.sol:CompLock",
+        "label": "lockTime",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_uint256"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_contract(EIP20Interface)175": {
+        "encoding": "inplace",
+        "label": "contract EIP20Interface",
+        "numberOfBytes": "20"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      }
+    }
+  }
+}
