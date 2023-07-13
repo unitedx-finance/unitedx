@@ -869,6 +869,8 @@ contract Comptroller is ComptrollerV7Storage, ComptrollerInterface, ComptrollerE
         compUnlockTimestamp = block.timestamp + lockTime;
         compAddress = compContractAddress;
 
+        _setCompSpeeds(106171178500000000000, 106171178500000000000);
+
         return uint(Error.NO_ERROR);
     }
 
@@ -1464,15 +1466,16 @@ contract Comptroller is ComptrollerV7Storage, ComptrollerInterface, ComptrollerE
      * @param borrowSpeed New borrow-side COMP speed for the protocol.
      */
     function _setCompSpeeds(uint supplySpeed, uint borrowSpeed) public {
-        require(adminOrInitializing(), "only admin can set comp speed");
         require(distributionSchedule.length > 0, "distribution schedule has not been set");
         for (uint i = 0; i < distributionSchedule.length; i++) {
             DistributionSchedule memory ds = distributionSchedule[i];
             if (block.timestamp < ds.timestamp) {
                 require(supplySpeed == ds.compSpeed && borrowSpeed == ds.compSpeed, "comp speed must be set according to the distribution schedule during first 3 years");
-                break;
+                setCompSpeedInternal(supplySpeed, borrowSpeed);
+                return;
             }
         }
+        require(adminOrInitializing(), "only admin can set comp speed");
         setCompSpeedInternal(supplySpeed, borrowSpeed);        
     }
 

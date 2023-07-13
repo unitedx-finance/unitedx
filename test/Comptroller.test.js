@@ -122,8 +122,11 @@ describe("Comptroller", function() {
     await unitroller._setPendingImplementation(_comptroller.address);
     await _comptroller._become(unitroller.address);
     const comptroller = Comptroller.attach(unitroller.address);
+
+    let parametersInitializedTimestamp = 0;
     if (!args.dontSetDistributionSchedule) {
       await comptroller._initializeCompParameters(1000, utdx.address);
+      parametersInitializedTimestamp = await time.latest();
     }
     await comptroller._setCloseFactor(ethers.utils.parseEther("0.5"));
     await comptroller._setLiquidationIncentive(ethers.utils.parseEther("1.08"));
@@ -160,6 +163,7 @@ describe("Comptroller", function() {
       interestRateModel,
       simplePriceOracle,
       oracleAggregatorV1,
+      parametersInitializedTimestamp,
     };
   }
   async function deployNormalFixture() {
@@ -288,39 +292,75 @@ describe("Comptroller", function() {
       ).to.equal(ethers.utils.parseEther("0.75"));
     });
 
-    it("Admin can set compSpeeds", async () => {
-      const { comptroller } = await loadFixture(deployNormalFixture);
+    it("Non-admin can set compSpeeds in the first three years", async () => {
+      const {
+        comptroller,
+        parametersInitializedTimestamp,
+        addr1,
+      } = await loadFixture(deployNormalFixture);
 
-      const compSpeed = distributionScheduleValues[0];
-      await comptroller._setCompSpeeds(compSpeed, compSpeed);
+      let compSpeed = distributionScheduleValues[0];
+      await comptroller.connect(addr1)._setCompSpeeds(compSpeed, compSpeed);
+
+      expect(await comptroller.compSupplySpeed()).to.equal(compSpeed);
+      expect(await comptroller.compBorrowSpeed()).to.equal(compSpeed);
+
+      compSpeed = distributionScheduleValues[4];
+      await time.increaseTo(
+        parametersInitializedTimestamp + 365 * 3 * 24 * 60 * 60 - 2
+      );
+      await comptroller.connect(addr1)._setCompSpeeds(compSpeed, compSpeed);
 
       expect(await comptroller.compSupplySpeed()).to.equal(compSpeed);
       expect(await comptroller.compBorrowSpeed()).to.equal(compSpeed);
     });
 
-    it("Non-admin cannot set compSpeeds", async () => {
-      const { comptroller, addr1 } = await loadFixture(deployNormalFixture);
+    it("Non-admin cannot set compSpeeds after three years", async () => {
+      const {
+        comptroller,
+        addr1,
+        parametersInitializedTimestamp,
+      } = await loadFixture(deployNormalFixture);
 
+      await time.increaseTo(
+        parametersInitializedTimestamp + 365 * 3 * 24 * 60 * 60
+      );
+      const compSpeed = distributionScheduleValues[4];
       await expect(
-        comptroller
-          .connect(addr1)
-          ._setCompSpeeds(
-            ethers.utils.parseEther("20"),
-            ethers.utils.parseEther("20")
-          )
+        comptroller.connect(addr1)._setCompSpeeds(compSpeed, compSpeed)
       ).to.be.revertedWith("only admin can set comp speed");
     });
 
-    it("Market gets proper amount of UTDX distributed", async () => {
-      const { comptroller, owner, xusdc } = await loadFixture(
+    it("Admin can set compSpeeds always", async () => {
+      const { comptroller, parametersInitializedTimestamp } = await loadFixture(
         deployNormalFixture
+      );
+
+      let compSpeed = distributionScheduleValues[0];
+      await comptroller._setCompSpeeds(compSpeed, compSpeed);
+
+      expect(await comptroller.compSupplySpeed()).to.equal(compSpeed);
+      expect(await comptroller.compBorrowSpeed()).to.equal(compSpeed);
+
+      await time.increaseTo(
+        parametersInitializedTimestamp + 365 * 3 * 24 * 60 * 60
+      );
+      compSpeed = ethers.utils.parseEther("100");
+      await comptroller._setCompSpeeds(compSpeed, compSpeed);
+      expect(await comptroller.compSupplySpeed()).to.equal(compSpeed);
+      expect(await comptroller.compBorrowSpeed()).to.equal(compSpeed);
+    });
+
+    it("Market gets proper amount of UTDX distributed", async () => {
+      const { comptroller, owner, xusdc, utdx } = await loadFixture(
+        deployFixtureNoDistributionSchedule
       );
 
       // Comptroller supplied 1 "wei" of USDC, let's supply small as well so we don't get rounding errors.
       const usdcWeiToSupply = 10;
       await xusdc.mint(usdcWeiToSupply);
       const compSpeed = distributionScheduleValues[0];
-      await comptroller._setCompSpeeds(compSpeed, compSpeed);
+      await comptroller._initializeCompParameters(0, utdx.address);
       const blocksToPass = 100000;
       await mine(blocksToPass);
       await comptroller["claimComp(address[],address[],bool,bool)"](
@@ -358,7 +398,8 @@ describe("Comptroller", function() {
         interestRateModel,
         simplePriceOracle,
         oracleAggregatorV1,
-      } = await loadFixture(deployNormalFixture);
+        utdx,
+      } = await loadFixture(deployFixtureNoDistributionSchedule);
 
       const xusdt = await deployErc20({
         owner,
@@ -381,7 +422,7 @@ describe("Comptroller", function() {
       const usdcWeiToSupply = 10;
       await xusdc.mint(usdcWeiToSupply);
       const compSpeed = distributionScheduleValues[0];
-      await comptroller._setCompSpeeds(compSpeed, compSpeed);
+      await comptroller._initializeCompParameters(0, utdx.address);
       const blocksToPass = 100000;
       await mine(blocksToPass);
       await comptroller["claimComp(address[],address[],bool,bool)"](
