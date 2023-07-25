@@ -50,35 +50,35 @@ module.exports = async function({ getChainId, getNamedAccounts, deployments }) {
   });
   await deployment.receipt;
 
-  // Smallest possible underlyingToken amount that would get converted to at least 1 xToken
-  const mintAmount =
-    UnderlyingTokenDecimals - 8 < 0
-      ? ethers.BigNumber.from(1)
-      : ethers.utils.parseUnits(
-          xTokenExchangeRate,
-          UnderlyingTokenDecimals - 8
-        );
-  const underlyingToken = await ethers.getContractAt(
-    "EIP20Interface",
-    UnderlyingTokenAddress.get(chainId)
-  );
-  const comptrollerUnderlyingTokenBalance = await underlyingToken.balanceOf(
-    comptroller.address
-  );
-  if (mintAmount.gt(comptrollerUnderlyingTokenBalance)) {
-    const transferAmount = mintAmount.sub(comptrollerUnderlyingTokenBalance);
-    console.log(
-      `Transferring ${transferAmount} of underlying token to Comptroller for initial deposit after market creation...`
-    );
-    await (
-      await underlyingToken.transfer(comptroller.address, transferAmount)
-    ).wait();
-  }
-
   const xTokenDelegator = await ethers.getContract(
     xTokenDelegatorDeploymentName
   );
   if (!(await comptroller.markets(xTokenDelegator.address)).isListed) {
+    // Smallest possible underlyingToken amount that would get converted to at least 1 xToken
+    const mintAmount =
+      UnderlyingTokenDecimals - 8 < 0
+        ? ethers.BigNumber.from(1)
+        : ethers.utils.parseUnits(
+            xTokenExchangeRate,
+            UnderlyingTokenDecimals - 8
+          );
+    const underlyingToken = await ethers.getContractAt(
+      "EIP20Interface",
+      UnderlyingTokenAddress.get(chainId)
+    );
+    const comptrollerUnderlyingTokenBalance = await underlyingToken.balanceOf(
+      comptroller.address
+    );
+    if (mintAmount.gt(comptrollerUnderlyingTokenBalance)) {
+      const transferAmount = mintAmount.sub(comptrollerUnderlyingTokenBalance);
+      console.log(
+        `Transferring ${transferAmount} of underlying token to Comptroller for initial deposit after market creation...`
+      );
+      await (
+        await underlyingToken.transfer(comptroller.address, transferAmount)
+      ).wait();
+    }
+
     console.log(`Supporting ${xTokenSymbol} market...`);
     await (await comptroller._supportMarket(xTokenDelegator.address)).wait();
   }
