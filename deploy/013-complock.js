@@ -1,22 +1,19 @@
+const { ethers } = require("hardhat");
 module.exports = async function({ getNamedAccounts, deployments }) {
   const { deploy } = deployments;
-
   const { deployer } = await getNamedAccounts();
 
   const comp = await ethers.getContract("Comp");
-  const comptroller = await ethers.getContract("Comptroller");
-  const dripRate = "0.5";
+  const comptroller = await ethers.getContract("Unitroller");
+  // 3 years
+  const lockTime = 3 * 365 * 24 * 60 * 60;
 
-  await deploy("Reservoir", {
+  await deploy("CompLock", {
     from: deployer,
     log: true,
     deterministicDeployment: false,
-    args: [
-      ethers.utils.parseEther(dripRate),
-      comp.address,
-      comptroller.address,
-    ],
+    args: [comp.address, comptroller.address, lockTime],
   });
 };
 
-module.exports.tags = ["Reservoir"];
+module.exports.tags = ["CompLock"];

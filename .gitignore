@@ -9,6 +9,7 @@ certora_*
 coverage/
 coverage.json
 coverageEnv/
+deployments/*/solcInputs
 emv-*/
 formulas/
 networks/test.json

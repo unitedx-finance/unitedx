@@ -1,0 +1,39 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "contracts/InterestRateModel.sol": {
+      "content": "// SPDX-License-Identifier: BSD-3-Clause\npragma solidity ^0.8.10;\n\n/**\n  * @title Compound's InterestRateModel Interface\n  * @author Compound\n  */\nabstract contract InterestRateModel {\n    /// @notice Indicator that this is an InterestRateModel contract (for inspection)\n    bool public constant isInterestRateModel = true;\n\n    /**\n      * @notice Calculates the current borrow interest rate per block\n      * @param cash The total amount of cash the market has\n      * @param borrows The total amount of borrows the market has outstanding\n      * @param reserves The total amount of reserves the market has\n      * @return The borrow rate per block (as a percentage, and scaled by 1e18)\n      */\n    function getBorrowRate(uint cash, uint borrows, uint reserves) virtual external view returns (uint);\n\n    /**\n      * @notice Calculates the current supply interest rate per block\n      * @param cash The total amount of cash the market has\n      * @param borrows The total amount of borrows the market has outstanding\n      * @param reserves The total amount of reserves the market has\n      * @param reserveFactorMantissa The current reserve factor the market has\n      * @return The supply rate per block (as a percentage, and scaled by 1e18)\n      */\n    function getSupplyRate(uint cash, uint borrows, uint reserves, uint reserveFactorMantissa) virtual external view returns (uint);\n}\n"
+    },
+    "contracts/Lens/InterestRateModelLens.sol": {
+      "content": "// SPDX-License-Identifier: BSD-3-Clause\npragma solidity ^0.8.10;\n\nimport \"../InterestRateModel.sol\";\n\ncontract InterestRateModelLens {\n    struct SimulationResponse {\n        uint256[] borrowSimulation;\n        uint256[] supplySimulation;\n    }\n\n    function getSimulationResponse(\n        uint referenceAmountInWei,\n        address interestRateModel,\n        uint reserveFactorMantissa\n    ) external view returns (SimulationResponse memory) {\n        InterestRateModel ir = InterestRateModel(interestRateModel);\n\n        uint256[] memory borrowSimulation = new uint256[](100);\n        uint256[] memory supplySimulation = new uint256[](100);\n\n        uint borrow = referenceAmountInWei;\n        uint reserves = 0;\n\n        for (uint percent_Factor = 1; percent_Factor <= 100; ++percent_Factor) {\n            uint cash = (percent_Factor * referenceAmountInWei)/1e2;\n            uint256 borrowRate = ir.getBorrowRate(cash, borrow, reserves);\n            borrowSimulation[percent_Factor - 1] = borrowRate;\n\n            uint256 supplyRate = ir.getSupplyRate(cash, borrow, reserves, reserveFactorMantissa);\n            supplySimulation[percent_Factor - 1] = supplyRate;\n        }\n\n        return SimulationResponse({ borrowSimulation: borrowSimulation, supplySimulation: supplySimulation });\n    }\n}"
+    }
+  },
+  "settings": {
+    "optimizer": {
+      "enabled": true,
+      "runs": 200
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "evm.methodIdentifiers",
+          "metadata",
+          "devdoc",
+          "userdoc",
+          "storageLayout",
+          "evm.gasEstimates",
+          "storageLayout"
+        ],
+        "": [
+          "ast"
+        ]
+      }
+    },
+    "metadata": {
+      "useLiteralContent": true
+    }
+  }
+}

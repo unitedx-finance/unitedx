@@ -3,6 +3,7 @@ pragma solidity ^0.8.10;
 
 import "./CToken.sol";
 import "./Oracle/PriceOracle.sol";
+import "./Reservoir.sol";
 
 contract UnitrollerAdminStorage {
     /**
@@ -68,8 +69,10 @@ contract ComptrollerV2Storage is ComptrollerV1Storage {
         // Per-market mapping of "accounts in this asset"
         mapping(address => bool) accountMembership;
 
-        // Whether or not this market receives COMP
-        bool isComped;
+        // Weight of this market for COMP distribution.
+        // This market will get COMP in ratio compWeight / totalCompWeightAcrossAllMarkets.
+        // Scaled by 1e18
+        uint compWeightMantissa;
     }
 
     /**
@@ -105,12 +108,6 @@ contract ComptrollerV3Storage is ComptrollerV2Storage {
     /// @notice A list of all markets
     CToken[] public allMarkets;
 
-    /// @notice The rate at which the flywheel distributes COMP, per block
-    uint public compRate;
-
-    /// @notice The portion of compRate that each market currently receives
-    mapping(address => uint) public compSpeeds;
-
     /// @notice The COMP market supply state for each market
     mapping(address => CompMarketState) public compSupplyState;
 
@@ -145,16 +142,28 @@ contract ComptrollerV5Storage is ComptrollerV4Storage {
 
 contract ComptrollerV6Storage is ComptrollerV5Storage {
     /// @notice The rate at which comp is distributed to the corresponding borrow market (per block)
-    mapping(address => uint) public compBorrowSpeeds;
+    uint public compBorrowSpeed;
 
     /// @notice The rate at which comp is distributed to the corresponding supply market (per block)
-    mapping(address => uint) public compSupplySpeeds;
+    uint public compSupplySpeed;
 }
 
 contract ComptrollerV7Storage is ComptrollerV6Storage {
-    /// @notice Flag indicating whether the function to fix COMP accruals has been executed (RE: proposal 62 bug)
-    bool public proposal65FixExecuted;
+    struct DistributionSchedule {
+        // At time before timestamp, compSpeed is the only value able to be set
+        uint timestamp;
+        uint compSpeed;
+    }
 
-    /// @notice Accounting storage mapping account addresses to how much COMP they owe the protocol.
-    mapping(address => uint) public compReceivable;
+    /// @notice Amount of COMP tokens that have been claimed by users
+    uint public compClaimed;
+
+    /// @notice Timestamp after which COMP can be claimed
+    uint public compUnlockTimestamp;
+
+    DistributionSchedule[] public distributionSchedule;
+
+    address public compAddress;
+
+    Reservoir public reservoir;
 }

@@ -1,5 +1,7 @@
 require("dotenv").config();
 require("@nomiclabs/hardhat-waffle");
+require("@nomicfoundation/hardhat-chai-matchers");
+require("@nomicfoundation/hardhat-toolbox");
 require("hardhat-abi-exporter");
 require("hardhat-deploy");
 require("hardhat-spdx-license-identifier");
@@ -16,11 +18,13 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
     console.log(account.address);
   }
 });
+const DEFAULT_GAS_MUL = 5;
+const GWEI = 1000 * 1000 * 1000;
 /**
  * @type import('hardhat/config').HardhatUserConfig
  */
 module.exports = {
-  // defaultNetwork: "hardhat",
+  defaultNetwork: "hardhat",
   namedAccounts: {
     deployer: {
       default: 0,
@@ -35,7 +39,35 @@ module.exports = {
       url: process.env.C1_DEVNET_RPC_URL,
       accounts: [`0x${process.env.PK}`],
       chainId: 200101,
-      gas: "auto",
+      gasMultiplier: DEFAULT_GAS_MUL,
+      gasPrice: 40 * GWEI,
+    },
+    c1_mainnet: {
+      url: process.env.C1_MAINNET_RPC_URL,
+      accounts: [`0x${process.env.PK}`],
+      chainId: 2001,
+      gasMultiplier: DEFAULT_GAS_MUL,
+      gasPrice: 40 * GWEI,
+    },
+    hardhat: {
+      forking: {
+        enabled: true,
+        url: `https://rpc-devnet-cardano-evm.c1.milkomeda.com`,
+        blockNumber: 14859999,
+      },
+      live: false,
+      saveDeployments: true,
+      tags: ["test", "local"],
+    },
+    localhost: {
+      live: false,
+      saveDeployments: true,
+      tags: ["local"],
+      forking: {
+        enabled: true,
+        url: `https://rpc-devnet-cardano-evm.c1.milkomeda.com`,
+        blockNumber: 14859221,
+      },
     },
   },
   solidity: {
@@ -75,6 +107,6 @@ module.exports = {
     timeout: 10000,
   },
   paths: {
-    tests: "./tests/hardhat",
+    tests: "./test",
   },
 };

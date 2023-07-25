@@ -30,7 +30,7 @@ contract GovernorAlpha {
     address public guardian;
 
     /// @notice The total number of proposals
-    uint public proposalCount;
+    uint public proposalCount = 1;
 
     struct Proposal {
         /// @notice Unique id for looking up a proposal

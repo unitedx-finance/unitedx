@@ -3,13 +3,19 @@ module.exports = async function({ getNamedAccounts, deployments }) {
 
   const { deployer } = await getNamedAccounts();
 
-  await deploy("CErc20Delegate", {
+  await deploy("CompoundLens", {
     from: deployer,
     log: true,
     deterministicDeployment: false,
-    gasLimit: 5000000,
-    gasPrice: 60000000000,
+    autoMine: true,
+  });
+
+  await deploy("InterestRateModelLens", {
+    from: deployer,
+    log: true,
+    deterministicDeployment: false,
+    autoMine: true,
   });
 };
 
-module.exports.tags = ["CErc20Delegate"];
+module.exports.tags = ["UnitedXLens"];
