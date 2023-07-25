@@ -19,6 +19,8 @@ const distributionScheduleValues = [
   ethers.utils.parseUnits("19907095970000000000", 0),
 ];
 
+const dripRate = ethers.utils.parseEther("250");
+
 describe("Comptroller", function() {
   ethers.utils.Logger.setLogLevel("error");
   async function deployErc20({
@@ -123,9 +125,26 @@ describe("Comptroller", function() {
     await _comptroller._become(unitroller.address);
     const comptroller = Comptroller.attach(unitroller.address);
 
+    const Reservoir = await ethers.getContractFactory("Reservoir");
+    const reservoir = await Reservoir.deploy(
+      dripRate,
+      utdx.address,
+      comptroller.address
+    );
+    await reservoir.deployed();
+
+    await utdx.transfer(
+      reservoir.address,
+      ethers.utils.parseEther("5000000000")
+    );
+
     let parametersInitializedTimestamp = 0;
     if (!args.dontSetDistributionSchedule) {
-      await comptroller._initializeCompParameters(1000, utdx.address);
+      await comptroller._initializeCompParameters(
+        1000,
+        utdx.address,
+        reservoir.address
+      );
       parametersInitializedTimestamp = await time.latest();
     }
     await comptroller._setCloseFactor(ethers.utils.parseEther("0.5"));
@@ -164,6 +183,7 @@ describe("Comptroller", function() {
       simplePriceOracle,
       oracleAggregatorV1,
       parametersInitializedTimestamp,
+      reservoir,
     };
   }
   async function deployNormalFixture() {
@@ -352,7 +372,7 @@ describe("Comptroller", function() {
     });
 
     it("Market gets proper amount of UTDX distributed", async () => {
-      const { comptroller, owner, xusdc, utdx } = await loadFixture(
+      const { comptroller, owner, xusdc, utdx, reservoir } = await loadFixture(
         deployFixtureNoDistributionSchedule
       );
 
@@ -360,9 +380,14 @@ describe("Comptroller", function() {
       const usdcWeiToSupply = 10;
       await xusdc.mint(usdcWeiToSupply);
       const compSpeed = distributionScheduleValues[0];
-      await comptroller._initializeCompParameters(0, utdx.address);
+      await comptroller._initializeCompParameters(
+        0,
+        utdx.address,
+        reservoir.address
+      );
       const blocksToPass = 100000;
       await mine(blocksToPass);
+      const ownerCompBalanceBefore = await utdx.balanceOf(owner.address);
       await comptroller["claimComp(address[],address[],bool,bool)"](
         [owner.address, comptroller.address],
         [xusdc.address],
@@ -370,19 +395,14 @@ describe("Comptroller", function() {
         true
       );
 
-      const ownerCompAccrued = await comptroller.compAccrued(owner.address);
-      // Comptroller accrues small amount because it deposited smallest unit of usdc when creating market.
-      const comptrollerCompAccrued = await comptroller.compAccrued(
-        comptroller.address
-      );
+      const ownerCompBalanceAfter = await utdx.balanceOf(owner.address);
+      const ownerCompDelta = ownerCompBalanceAfter.sub(ownerCompBalanceBefore);
       const expected = compSpeed.mul(blocksToPass + 1);
-      expect(ownerCompAccrued).to.equal(
+
+      // Owner supplied 10, comptroller supplied 1, so owner should get 10/11 of the rewards
+      expect(ownerCompDelta).to.equal(
         expected.mul(usdcWeiToSupply).div(usdcWeiToSupply + 1)
       );
-      expect(comptrollerCompAccrued).to.equal(
-        expected.mul(1).div(usdcWeiToSupply + 1)
-      );
-      expect(ownerCompAccrued.add(comptrollerCompAccrued)).to.equal(expected);
     });
 
     it("Two markets with different compWeights gets proper amount of UTDX distributed", async () => {
@@ -399,6 +419,7 @@ describe("Comptroller", function() {
         simplePriceOracle,
         oracleAggregatorV1,
         utdx,
+        reservoir,
       } = await loadFixture(deployFixtureNoDistributionSchedule);
 
       const xusdt = await deployErc20({
@@ -422,9 +443,14 @@ describe("Comptroller", function() {
       const usdcWeiToSupply = 10;
       await xusdc.mint(usdcWeiToSupply);
       const compSpeed = distributionScheduleValues[0];
-      await comptroller._initializeCompParameters(0, utdx.address);
+      await comptroller._initializeCompParameters(
+        0,
+        utdx.address,
+        reservoir.address
+      );
       const blocksToPass = 100000;
       await mine(blocksToPass);
+      const ownerCompBalanceBefore = await utdx.balanceOf(owner.address);
       await comptroller["claimComp(address[],address[],bool,bool)"](
         [owner.address, comptroller.address],
         [xusdc.address, xusdt.address],
@@ -432,37 +458,20 @@ describe("Comptroller", function() {
         true
       );
 
-      const ownerCompAccrued = await comptroller.compAccrued(owner.address);
-      // Comptroller accrues small amount because it deposited smallest unit of usdc when creating market.
-      const comptrollerCompAccrued = await comptroller.compAccrued(
-        comptroller.address
-      );
+      const ownerCompBalanceAfter = await utdx.balanceOf(owner.address);
+      const ownerCompDelta = ownerCompBalanceAfter.sub(ownerCompBalanceBefore);
       const expectedCompDistributed = compSpeed.mul(blocksToPass + 1);
 
+      // Owner supplied 10, comptroller supplied 1, so owner should get 10/11 of the rewards
       const ownerCompAccruedFromUSDC = expectedCompDistributed
         .mul(xusdcWeight)
         .div(xusdcWeight + xusdtWeight)
         .mul(usdcWeiToSupply)
         .div(usdcWeiToSupply + 1);
+      // Owner supplied 0, so owner should get 0 of the rewards
       const ownerCompAccruedFromUSDT = ethers.BigNumber.from(0);
-      expect(ownerCompAccrued).to.equal(
+      expect(ownerCompDelta).to.equal(
         ownerCompAccruedFromUSDC.add(ownerCompAccruedFromUSDT)
-      );
-
-      const comptrollerCompAccruedFromUSDC = expectedCompDistributed
-        .mul(xusdcWeight)
-        .div(xusdcWeight + xusdtWeight)
-        .mul(1)
-        .div(usdcWeiToSupply + 1);
-      const comptrollerCompAccruedFromUSDT = expectedCompDistributed
-        .mul(xusdtWeight)
-        .div(xusdcWeight + xusdtWeight);
-      expect(comptrollerCompAccrued).to.equal(
-        comptrollerCompAccruedFromUSDC.add(comptrollerCompAccruedFromUSDT)
-      );
-
-      expect(ownerCompAccrued.add(comptrollerCompAccrued)).to.equal(
-        expectedCompDistributed
       );
     });
 
@@ -613,7 +622,7 @@ describe("Comptroller", function() {
     });
 
     it("Can only set distribution schedule once", async () => {
-      const { comptroller, utdx } = await loadFixture(
+      const { comptroller, utdx, reservoir } = await loadFixture(
         deployFixtureNoDistributionSchedule
       );
 
@@ -623,14 +632,20 @@ describe("Comptroller", function() {
       expect(
         await comptroller.callStatic._initializeCompParameters(
           1000,
-          utdx.address
+          utdx.address,
+          reservoir.address
         )
       ).to.equal(0);
-      await comptroller._initializeCompParameters(1000, utdx.address);
+      await comptroller._initializeCompParameters(
+        1000,
+        utdx.address,
+        reservoir.address
+      );
       expect(
         await comptroller.callStatic._initializeCompParameters(
           1000,
-          utdx.address
+          utdx.address,
+          reservoir.address
         )
       ).to.equal(14);
     });
@@ -649,10 +664,14 @@ describe("Comptroller", function() {
     });
 
     it("During first 3 years, you cannot set comp speed to values other than in the distribution schedule", async () => {
-      const { comptroller, utdx } = await loadFixture(
+      const { comptroller, utdx, reservoir } = await loadFixture(
         deployFixtureNoDistributionSchedule
       );
-      await comptroller._initializeCompParameters(0, utdx.address);
+      await comptroller._initializeCompParameters(
+        0,
+        utdx.address,
+        reservoir.address
+      );
 
       const compSpeed = ethers.utils.parseEther("20");
 
@@ -694,10 +713,14 @@ describe("Comptroller", function() {
     });
 
     it("Test all time periods of distribution schedule comp speed setting", async () => {
-      const { comptroller, utdx } = await loadFixture(
+      const { comptroller, utdx, reservoir } = await loadFixture(
         deployFixtureNoDistributionSchedule
       );
-      await comptroller._initializeCompParameters(0, utdx.address);
+      await comptroller._initializeCompParameters(
+        0,
+        utdx.address,
+        reservoir.address
+      );
 
       await comptroller._setCompSpeeds(
         distributionScheduleValues[0],
@@ -779,7 +802,7 @@ describe("Comptroller", function() {
     });
 
     it("Can claim UTDX only after compUnlockTimestamp", async () => {
-      const { comptroller, owner, utdx } = await loadFixture(
+      const { comptroller, owner, utdx, reservoir } = await loadFixture(
         deployFixtureNoDistributionSchedule
       );
 
@@ -787,7 +810,8 @@ describe("Comptroller", function() {
 
       await comptroller._initializeCompParameters(
         LOCK_TIME_SECONDS,
-        utdx.address
+        utdx.address,
+        reservoir.address
       );
 
       await expect(

@@ -849,13 +849,13 @@ contract Comptroller is ComptrollerV7Storage, ComptrollerInterface, ComptrollerE
     }
 
     /**
-      * @notice Sets the distribution schedule for COMP distribution, the COMP Claim unlock timestamp, and COMP address
+      * @notice Sets the distribution schedule for COMP distribution, the COMP Claim unlock timestamp, COMP address, and Reservoir address
       * @dev Admin function to set distributionSchedule
       * @param lockTime time in seconds to be added to current time and saved as a comp claim unlock timestamp
       * @param compContractAddress address of COMP
       * @return uint 0=success, otherwise a failure
       */
-    function _initializeCompParameters(uint lockTime, address compContractAddress) external returns (uint) {
+    function _initializeCompParameters(uint lockTime, address compContractAddress, address reservoirContractAddress) external returns (uint) {
     	require(msg.sender == admin, "only admin can set distribution schedule");
         if (distributionSchedule.length != 0) { 
             return fail(Error.REJECTION, FailureInfo.DISTRIBUTION_SCHEDULE_ALREADY_SET);
@@ -868,6 +868,7 @@ contract Comptroller is ComptrollerV7Storage, ComptrollerInterface, ComptrollerE
         distributionSchedule.push(DistributionSchedule(block.timestamp + 1095 days, 19907095970000000000));
         compUnlockTimestamp = block.timestamp + lockTime;
         compAddress = compContractAddress;
+        reservoir = Reservoir(reservoirContractAddress);
 
         _setCompSpeeds(106171178500000000000, 106171178500000000000);
 
@@ -1404,6 +1405,7 @@ contract Comptroller is ComptrollerV7Storage, ComptrollerInterface, ComptrollerE
      */
     function claimComp(address[] memory holders, CToken[] memory cTokens, bool borrowers, bool suppliers) public {
         require(block.timestamp > compUnlockTimestamp, "comp claiming is locked");
+        reservoir.drip();
         for (uint i = 0; i < cTokens.length; i++) {
             CToken cToken = cTokens[i];
             require(markets[address(cToken)].isListed, "market must be listed");
