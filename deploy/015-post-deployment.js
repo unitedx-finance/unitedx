@@ -1,15 +1,15 @@
 const { ethers } = require("hardhat");
 
-const MULTISIG_WALLET_ADDRESS = "0x";
+const MULTISIG_WALLET_ADDRESS = "0xeE317C81fF154071E31F523E0749b671a0D32e63";
 const xTokens = ["xUSDCDelegator", "XMada"];
 
 module.exports = async function({ getNamedAccounts, deployments }) {
+  const { deployer } = await getNamedAccounts();
   const comp = await ethers.getContract("Comp");
   const reservoir = await ethers.getContract("Reservoir");
   const complock = await ethers.getContract("CompLock");
   const unitroller = await ethers.getContract("Unitroller");
   const oracleAggregatorV1 = await ethers.getContract("OracleAggregatorV1");
-  const timelock = await ethers.getContract("Timelock");
   const GovernorBravoDelegator = await ethers.getContract(
     "GovernorBravoDelegator"
   );
@@ -20,18 +20,25 @@ module.exports = async function({ getNamedAccounts, deployments }) {
     GovernorBravoDelegator.address
   );
 
-  console.log("Transferring 3.75B UTDX to Reservoir...");
-  await (
-    await comp.transfer(
-      reservoir.address,
-      ethers.utils.parseEther("3750000000")
-    )
-  ).wait();
+  if (
+    ethers.utils.parseEther("5000000000").eq(await comp.balanceOf(deployer))
+  ) {
+    console.log("Transferring 3.75B UTDX to Reservoir...");
+    await (
+      await comp.transfer(
+        reservoir.address,
+        ethers.utils.parseEther("3750000000")
+      )
+    ).wait();
 
-  console.log("Transferring 1.25B UTDX to CompLock...");
-  await (
-    await comp.transfer(complock.address, ethers.utils.parseEther("1250000000"))
-  ).wait();
+    console.log("Transferring 1.25B UTDX to CompLock...");
+    await (
+      await comp.transfer(
+        complock.address,
+        ethers.utils.parseEther("1250000000")
+      )
+    ).wait();
+  }
 
   console.log(
     `Setting pending admin of Unitroller to ${MULTISIG_WALLET_ADDRESS}...`
