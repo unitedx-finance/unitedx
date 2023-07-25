@@ -3,6 +3,7 @@ pragma solidity ^0.8.10;
 
 import "./CToken.sol";
 import "./Oracle/PriceOracle.sol";
+import "./Reservoir.sol";
 
 contract UnitrollerAdminStorage {
     /**
@@ -107,9 +108,6 @@ contract ComptrollerV3Storage is ComptrollerV2Storage {
     /// @notice A list of all markets
     CToken[] public allMarkets;
 
-    /// @notice The rate at which the flywheel distributes COMP, per block
-    uint public compRate;
-
     /// @notice The COMP market supply state for each market
     mapping(address => CompMarketState) public compSupplyState;
 
@@ -166,4 +164,6 @@ contract ComptrollerV7Storage is ComptrollerV6Storage {
     DistributionSchedule[] public distributionSchedule;
 
     address public compAddress;
+
+    Reservoir public reservoir;
 }

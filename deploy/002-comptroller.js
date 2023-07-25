@@ -39,12 +39,26 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
 
   const comptroller = Comptroller.attach(unitroller.address);
 
+  const dripRate = "250";
+  await deploy("Reservoir", {
+    from: deployer,
+    log: true,
+    deterministicDeployment: false,
+    args: [
+      ethers.utils.parseEther(dripRate),
+      utdx.address,
+      comptroller.address,
+    ],
+  });
+  const reservoir = await ethers.getContract("Reservoir");
+
   if (ethers.constants.Zero.eq(await comptroller.compUnlockTimestamp())) {
     console.log("Initializing UTDX parameters...");
     await (
       await comptroller._initializeCompParameters(
         UTDX_CLAIM_UNLOCK_TIME,
-        utdx.address
+        utdx.address,
+        reservoir.address
       )
     ).wait();
   }
