@@ -10,13 +10,13 @@ import "./EIP20Interface.sol";
  */
 contract CompLock {
   /// @notice Reference to token to transfer (immutable)
-  EIP20Interface public token;
+  EIP20Interface public immutable token;
 
   /// @notice Target to receive transferred tokens (immutable)
-  address public target;
+  address public immutable target;
 
-  /// @notice Timestamp after which the transfer can be initiated
-  uint public lockTime;
+  /// @notice Timestamp after which the transfer can be initiated (immutable)
+  uint public immutable lockTime;
 
   /**
     * @notice Constructs a CompLock
